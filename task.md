@@ -1,0 +1,24 @@
+# EV Charging Android App
+
+- [ ] Project Initialization <!-- id: 0 -->
+    - [x] Explore workspace and environment <!-- id: 1 -->
+    - [x] Fix Build Issues <!-- id: 20 -->
+    - [ ] Install App on Device <!-- id: 21 -->
+    - [x] Create Implementation Plan <!-- id: 2 -->
+    - [x] Initialize Android Project Structure <!-- id: 3 -->
+    - [x] Configure AndroidX <!-- id: 19 -->
+- [/] Authentication Feature <!-- id: 4 -->
+    - [x] Setup Firebase Configuration <!-- id: 5 -->
+    - [x] Implement Sign Up Screen (Model, Color, Name, Pass) <!-- id: 6 -->
+    - [x] Implement Login Screen <!-- id: 7 -->
+    - [x] Implement Auth Repository & ViewModel <!-- id: 8 -->
+- [/] Main Application Features <!-- id: 9 -->
+    - [x] Setup Bottom Navigation (Home, Navigation, Trip Planner) <!-- id: 10 -->
+    - [x] Implement Home Screen <!-- id: 11 -->
+    - [x] Implement Navigation Screen (Google Maps & Stations) <!-- id: 12 -->
+    - [x] Implement Trip Planner Screen (Route & Range) <!-- id: 13 -->
+- [ ] Advanced Features <!-- id: 14 -->
+    - [/] Implement AI Voice Assistant <!-- id: 15 -->
+    - [x] Add Google Maps Dependencies & Manifest Config <!-- id: 16 -->
+- [ ] Version Control <!-- id: 17 -->
+    - [ ] Push Code to Git <!-- id: 18 -->
