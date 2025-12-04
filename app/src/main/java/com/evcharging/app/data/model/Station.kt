@@ -14,5 +14,9 @@ data class Station(
     val chargerType: String = "Normal", // "Fast", "Normal", "Both"
     val amenities: List<String> = emptyList(), // "Dining", "Snacks", etc.
     val maintenanceStatus: String = "Operational", // "Maintenance", "Operational"
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
+    val dining: List<Map<String, Any>> = emptyList(),
+    val promotions: List<Map<String, Any>> = emptyList(),
+    val pointsPerKw: Double = 0.001,
+    val rewards: List<Map<String, Any>> = emptyList()
 )

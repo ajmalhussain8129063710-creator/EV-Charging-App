@@ -1,0 +1,220 @@
+package com.evcharging.admin.ui.home
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EvStation
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import com.evcharging.admin.ui.theme.GradientEnd
+import com.evcharging.admin.ui.theme.GradientStart
+
+@Composable
+fun DashboardContent(
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    val station by viewModel.station.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center),
+                color = MaterialTheme.colorScheme.primary
+            )
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "My Station",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    IconButton(onClick = { viewModel.refresh() }) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (station != null) {
+                    // Station Card
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column {
+                            // Image
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                            ) {
+                                if (station!!.imageUrl.isNotEmpty()) {
+                                    AsyncImage(
+                                        model = station!!.imageUrl,
+                                        contentDescription = "Station Image",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(Color.DarkGray),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.EvStation,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(64.dp),
+                                            tint = Color.LightGray
+                                        )
+                                    }
+                                }
+                                
+                                // Status Badge
+                                Surface(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(12.dp),
+                                    shape = RoundedCornerShape(50),
+                                    color = if (station!!.status == "Available") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = station!!.status,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = if (station!!.status == "Available") MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Switch(
+                                            checked = station!!.status == "Available",
+                                            onCheckedChange = { isAvailable ->
+                                                val newStatus = if (isAvailable) "Available" else "Maintenance"
+                                                viewModel.updateStatus(newStatus)
+                                            },
+                                            modifier = Modifier.scale(0.7f)
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Details
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = station!!.name,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.LocationOn,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.secondary
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = station!!.location,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "Price",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        )
+                                        Text(
+                                            text = "$${station!!.pricePerKw}/kW",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    // Add more stats here if needed
+                                }
+                                
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = station!!.description,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // Empty State
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No Station Found",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

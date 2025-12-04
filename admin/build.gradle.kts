@@ -43,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packaging {
         resources {
@@ -53,7 +53,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":app")) // Access shared code if needed, or duplicate for now to avoid circular deps. 
+    // implementation(project(":app")) // REMOVED: Cannot depend on an application module. 
     // Actually, better to NOT depend on :app to avoid circular dependency if :app depends on :admin.
     // Ideally, shared code should be in a :core module.
     // For this quick implementation, we will duplicate the necessary data models or move them to a shared module later.
@@ -85,6 +85,9 @@ dependencies {
     
     // Coil
     implementation(libs.coil.compose)
+
+    // Icons
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

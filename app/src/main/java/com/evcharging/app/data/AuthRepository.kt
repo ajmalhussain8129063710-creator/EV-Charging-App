@@ -64,4 +64,12 @@ class AuthRepository @Inject constructor(
             Result.failure(e)
         }
     }
+    suspend fun updatePoints(userId: String, newPoints: Int): Result<Boolean> {
+        return try {
+            firestore.collection("users").document(userId).update("points", newPoints).await()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
