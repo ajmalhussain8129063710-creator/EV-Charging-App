@@ -18,6 +18,7 @@ import com.evcharging.app.ui.components.PaymentDialog
 import com.evcharging.app.ui.components.VoiceAssistantButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.clickable
 
 @Composable
 fun TripPlannerScreen(
@@ -85,7 +86,67 @@ fun TripPlannerScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Trip Planner", style = MaterialTheme.typography.headlineMedium)
+            Text(text = "Trip Planner", style = MaterialTheme.typography.headlineMedium, color = com.evcharging.app.ui.theme.NeonCyan)
+            
+            // Upcoming Bookings Section
+            val upcomingBookings by viewModel.upcomingBookings.collectAsState()
+            var bookingToCancel by remember { mutableStateOf<String?>(null) } // Booking ID
+
+            if (upcomingBookings.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("Upcoming Bookings", style = MaterialTheme.typography.titleLarge, color = com.evcharging.app.ui.theme.NeonGreen, modifier = Modifier.align(Alignment.Start))
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                upcomingBookings.forEach { booking ->
+                    com.evcharging.app.ui.components.GlassCard(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { 
+                            bookingToCancel = booking["id"] as String
+                        }
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(booking["stationName"] as String, style = MaterialTheme.typography.titleMedium, color = com.evcharging.app.ui.theme.TextPrimary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) // Updated color
+                                Text("Payment: ${booking["paymentMethod"]}", style = MaterialTheme.typography.bodySmall, color = com.evcharging.app.ui.theme.TextSecondary) // Updated color
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text("Confirmed", color = com.evcharging.app.ui.theme.NeonGreen, style = MaterialTheme.typography.labelMedium)
+                                Text("$${booking["amount"]}", color = com.evcharging.app.ui.theme.NeonCyan, style = MaterialTheme.typography.titleMedium)
+                            }
+                        }
+                    }
+                }
+                
+                if (bookingToCancel != null) {
+                    AlertDialog(
+                        onDismissRequest = { bookingToCancel = null },
+                        title = { Text("Cancel Booking?") },
+                        text = { Text("Are you sure you want to cancel this booking? A refund will be processed.") },
+                        confirmButton = {
+                            Button(
+                                onClick = { 
+                                    viewModel.cancelBooking(bookingToCancel!!)
+                                    bookingToCancel = null
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = com.evcharging.app.ui.theme.NeonRed)
+                            ) {
+                                Text("Cancel Booking")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { bookingToCancel = null }) {
+                                Text("Keep")
+                            }
+                        },
+                        containerColor = com.evcharging.app.ui.theme.DeepBackground,
+                        titleContentColor = com.evcharging.app.ui.theme.TextPrimary,
+                        textContentColor = com.evcharging.app.ui.theme.TextSecondary
+                    )
+                }
+            }
             
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -102,7 +163,16 @@ fun TripPlannerScreen(
                         viewModel.searchLocation(it)
                     },
                     label = { Text("Start Location") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = com.evcharging.app.ui.theme.NeonCyan,
+                        unfocusedBorderColor = com.evcharging.app.ui.theme.TextSecondary,
+                        focusedLabelColor = com.evcharging.app.ui.theme.NeonCyan,
+                        unfocusedLabelColor = com.evcharging.app.ui.theme.TextSecondary,
+                        cursorColor = com.evcharging.app.ui.theme.NeonCyan,
+                        focusedTextColor = com.evcharging.app.ui.theme.TextPrimary,
+                        unfocusedTextColor = com.evcharging.app.ui.theme.TextPrimary
+                    )
                 )
                 if (activeField == "start" && suggestions.isNotEmpty()) {
                     androidx.compose.foundation.lazy.LazyColumn(
@@ -111,7 +181,7 @@ fun TripPlannerScreen(
                         items(suggestions.size) { index ->
                             val prediction = suggestions[index]
                             DropdownMenuItem(
-                                text = { Text(prediction.primaryText) },
+                                text = { Text(prediction.primaryText, color = Color.White) },
                                 onClick = { 
                                     startLocation = prediction.primaryText
                                     viewModel.clearSuggestions()
@@ -135,7 +205,16 @@ fun TripPlannerScreen(
                         viewModel.searchLocation(it)
                     },
                     label = { Text("Destination") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = com.evcharging.app.ui.theme.NeonCyan,
+                        unfocusedBorderColor = com.evcharging.app.ui.theme.TextSecondary,
+                        focusedLabelColor = com.evcharging.app.ui.theme.NeonCyan,
+                        unfocusedLabelColor = com.evcharging.app.ui.theme.TextSecondary,
+                        cursorColor = com.evcharging.app.ui.theme.NeonCyan,
+                        focusedTextColor = com.evcharging.app.ui.theme.TextPrimary,
+                        unfocusedTextColor = com.evcharging.app.ui.theme.TextPrimary
+                    )
                 )
                 if (activeField == "dest" && suggestions.isNotEmpty()) {
                     androidx.compose.foundation.lazy.LazyColumn(
@@ -144,7 +223,7 @@ fun TripPlannerScreen(
                         items(suggestions.size) { index ->
                             val prediction = suggestions[index]
                             DropdownMenuItem(
-                                text = { Text(prediction.primaryText) },
+                                text = { Text(prediction.primaryText, color = Color.White) },
                                 onClick = { 
                                     destination = prediction.primaryText
                                     viewModel.clearSuggestions()

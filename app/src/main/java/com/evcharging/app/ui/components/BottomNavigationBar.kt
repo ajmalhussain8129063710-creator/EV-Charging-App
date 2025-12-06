@@ -1,9 +1,11 @@
 package com.evcharging.app.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -16,19 +18,21 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
-    object Service : BottomNavItem("service_center", Icons.Default.Build, "Service")
     object Home : BottomNavItem("home", Icons.Default.Home, "Home")
     object Navigation : BottomNavItem("navigation", Icons.Default.Map, "Navigation")
     object TripPlanner : BottomNavItem("tripplanner", Icons.Default.Timeline, "Trip Planner")
+    object Wallet : BottomNavItem("wallet", Icons.Default.AccountBalanceWallet, "Wallet")
+    object Profile : BottomNavItem("profile", Icons.Default.Person, "Profile")
 }
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
-        BottomNavItem.Service,
         BottomNavItem.Home,
         BottomNavItem.Navigation,
-        BottomNavItem.TripPlanner
+        BottomNavItem.TripPlanner,
+        BottomNavItem.Wallet,
+        BottomNavItem.Profile
     )
     
     NavigationBar {

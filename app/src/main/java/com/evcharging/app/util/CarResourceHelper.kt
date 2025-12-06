@@ -30,4 +30,23 @@ object CarResourceHelper {
             else -> R.drawable.car_front
         }
     }
+    fun get3dModelUrl(modelName: String?, colorName: String?): String {
+        // Placeholder GLB URLs for demonstration
+        // In a real app, these would be specific to the car model and color
+        
+        val lowerName = modelName?.lowercase() ?: ""
+        
+        return when {
+            // Bikes
+            lowerName.contains("ola") || lowerName.contains("ather") || lowerName.contains("tvs") -> 
+                "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb" // Placeholder Bike (Helmet)
+            
+            // Cars
+            lowerName.contains("tesla") -> 
+                "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/ToyCar/glTF-Binary/ToyCar.glb" // Placeholder Car
+            
+            // Default Car
+            else -> "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/ToyCar/glTF-Binary/ToyCar.glb"
+        }
+    }
 }

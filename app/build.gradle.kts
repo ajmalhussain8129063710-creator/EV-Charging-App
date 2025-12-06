@@ -70,11 +70,15 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-storage")
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.50")
     kapt("com.google.dagger:hilt-android-compiler:2.50")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+
+    // Coil
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
     // Icons
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
@@ -84,6 +88,12 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.android.libraries.places:places:3.3.0")
+    
+    // 3D Rendering
+    implementation("io.github.sceneview:sceneview:2.0.3")
+    
+    // Animation
+    implementation("com.airbnb.android:lottie-compose:6.0.0")
 
     // Permissions
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")

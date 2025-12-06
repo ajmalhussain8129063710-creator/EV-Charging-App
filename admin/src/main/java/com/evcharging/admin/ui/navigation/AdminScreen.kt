@@ -7,4 +7,7 @@ sealed class AdminScreen(val route: String) {
     object Wallet : AdminScreen("wallet")
     object Dining : AdminScreen("dining")
     object Promotions : AdminScreen("promotions")
+    object Profile : AdminScreen("profile")
+    object Settings : AdminScreen("settings")
+    object Support : AdminScreen("support")
 }

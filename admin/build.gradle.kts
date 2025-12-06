@@ -74,6 +74,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
     
     // Hilt
     implementation(libs.hilt.android)
@@ -85,6 +86,11 @@ dependencies {
     
     // Coil
     implementation(libs.coil.compose)
+
+    // Google Maps
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+    implementation("com.google.android.libraries.places:places:3.3.0")
 
     // Icons
     implementation("androidx.compose.material:material-icons-extended:1.5.4")

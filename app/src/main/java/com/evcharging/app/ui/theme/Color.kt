@@ -2,17 +2,25 @@ package com.evcharging.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Elite AI Palette
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Backgrounds
+val DeepBackground = Color(0xFF0A0E17) // Deep Midnight Blue/Black
+val SurfaceBlack = Color(0xFF131925) // Slightly lighter for surfaces
+val CardBackground = Color(0xFF1C2230) // Fallback for non-glass
 
-// Corporate Colors
-val CorporateBlue = Color(0xFF0D47A1)
-val CorporateLightBlue = Color(0xFF42A5F5)
-val CorporateWhite = Color(0xFFFFFFFF)
-val CorporateBlack = Color(0xFF000000)
-val CorporateGray = Color(0xFFF5F5F5)
+// Neon Accents
+val NeonCyan = Color(0xFF00E5FF)       // Primary Action / High Energy
+val NeonPurple = Color(0xFFD500F9)     // Secondary / Creative
+val NeonGreen = Color(0xFF00E676)      // Success / Safe
+val NeonRed = Color(0xFFFF1744)        // Error / Danger
+val NeonBlue = Color(0xFF2979FF)       // Info / Links
+
+// Glass / Transparencies (for Glassmorphism)
+val GlassWhite = Color(0x1AFFFFFF)     // 10% White
+val GlassSurface = Color(0x0DFFFFFF)   // 5% White
+
+// Typography
+val TextPrimary = Color(0xFFFFFFFF)
+val TextSecondary = Color(0xB3FFFFFF)  // 70% White
+val TextTertiary = Color(0x80FFFFFF)   // 50% White

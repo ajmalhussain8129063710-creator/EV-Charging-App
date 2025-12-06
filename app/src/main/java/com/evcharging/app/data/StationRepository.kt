@@ -75,7 +75,7 @@ class StationRepository @Inject constructor(
         startLon: Double,
         endLat: Double,
         endLon: Double,
-        bufferKm: Double = 50.0 // Increased buffer to 50km for better detection with sparse data
+        bufferKm: Double = 5.0 // Reduced buffer to 5km for stricter route filtering
     ): List<Station> {
         return stations.filter { station ->
             val dist = distanceFromLineSegment(
@@ -104,5 +104,33 @@ class StationRepository @Inject constructor(
         // If the station is "along the way", the sum of distances should be close to the total distance.
         // Allow for a detour factor (e.g., bufferKm)
         return (distStartToStation + distStationToEnd) <= (distStartToEnd + bufferKm)
+    }
+
+    suspend fun getStationsNear(lat: Double, lng: Double, radiusKm: Double = 5.0): Result<List<Station>> {
+        return try {
+            // Fetch all stations and filter locally (for simplicity without geospatial query)
+            // In a real app with many stations, use GeoHash or GeoFire
+            val snapshot = firestore.collection("stations").get().await()
+            val allStations = snapshot.toObjects(Station::class.java)
+            
+            val nearbyStations = allStations.filter { station ->
+                calculateDistance(lat, lng, station.latitude, station.longitude) <= radiusKm
+            }
+            
+            Result.success(nearbyStations)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getStationDining(stationId: String): Result<List<com.evcharging.app.data.model.Dining>> {
+        return try {
+            val snapshot = firestore.collection("stations").document(stationId)
+                .collection("dining").get().await()
+            val diningList = snapshot.toObjects(com.evcharging.app.data.model.Dining::class.java)
+            Result.success(diningList)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

@@ -25,13 +25,21 @@ class AuthViewModel @Inject constructor(
     private val _vehicleColors = MutableStateFlow<List<String>>(emptyList())
     val vehicleColors: StateFlow<List<String>> = _vehicleColors
 
+    private val _vehicleType = MutableStateFlow("Car")
+    val vehicleType: StateFlow<String> = _vehicleType
+
     init {
-        fetchConfig()
+        fetchConfig("Car")
     }
 
-    private fun fetchConfig() {
+    fun setVehicleType(type: String) {
+        _vehicleType.value = type
+        fetchConfig(type)
+    }
+
+    private fun fetchConfig(type: String) {
         viewModelScope.launch {
-            val modelsResult = configRepository.getVehicleModels()
+            val modelsResult = configRepository.getVehicleModels(type)
             if (modelsResult.isSuccess) {
                 _vehicleModels.value = modelsResult.getOrDefault(emptyList())
             }
@@ -54,10 +62,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signUp(email: String, pass: String, name: String, carModel: String, carColor: String) {
+    fun signUp(emailOrPhone: String, pass: String, name: String, carModel: String, carColor: String, phoneNumber: String, vehicleType: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val result = repository.signUp(email, pass, name, carModel, carColor)
+            val result = repository.signUp(emailOrPhone, pass, name, carModel, carColor, phoneNumber, vehicleType)
             if (result.isSuccess) {
                 _authState.value = AuthState.Success
             } else {

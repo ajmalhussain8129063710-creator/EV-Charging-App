@@ -26,6 +26,7 @@ import com.evcharging.admin.model.Station
 import com.evcharging.admin.ui.navigation.AdminScreen
 import com.evcharging.admin.ui.theme.GradientEnd
 import com.evcharging.admin.ui.theme.GradientStart
+import com.evcharging.admin.ui.components.AddressAutocomplete
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +45,8 @@ fun SignupScreen(
     var stationImageUrl by remember { mutableStateOf("") }
     var stationVideoUrl by remember { mutableStateOf("") }
     var stationDescription by remember { mutableStateOf("") }
+    var stationLatitude by remember { mutableStateOf("") }
+    var stationLongitude by remember { mutableStateOf("") }
     var pricePerKw by remember { mutableStateOf("") }
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -95,6 +98,18 @@ fun SignupScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    
+                    var phoneNumber by remember { mutableStateOf("") }
+                    OutlinedTextField(
+                        value = phoneNumber, onValueChange = { phoneNumber = it },
+                        label = { Text("Phone Number") },
+                        leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     OutlinedTextField(
                         value = password, onValueChange = { password = it },
                         label = { Text("Password") },
@@ -127,12 +142,53 @@ fun SignupScreen(
                         shape = RoundedCornerShape(12.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = stationLocation, onValueChange = { stationLocation = it },
-                        label = { Text("Location (Address)") },
-                        leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                    
+                    // Facility Type Dropdown
+                    var expanded by remember { mutableStateOf(false) }
+                    var selectedType by remember { mutableStateOf("Charging Station") }
+                    val types = listOf("Charging Station", "Dining", "Service Center")
+
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = selectedType,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Facility Type") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            types.forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type) },
+                                    onClick = {
+                                        selectedType = type
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    AddressAutocomplete(
+                        value = stationLocation,
+                        onValueChange = { stationLocation = it },
+                        onAddressSelected = { address, lat, lng ->
+                            stationLocation = address
+                            stationLatitude = lat.toString()
+                            stationLongitude = lng.toString()
+                        },
+                        label = { Text("Location (Search Address)") },
+                        modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -150,6 +206,8 @@ fun SignupScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = stationDescription, onValueChange = { stationDescription = it },
@@ -183,13 +241,16 @@ fun SignupScreen(
                     isLoading = true
                     val station = Station(
                         name = stationName,
-                        location = stationLocation,
+                        address = stationLocation,
                         imageUrl = stationImageUrl,
                         videoUrl = stationVideoUrl,
                         description = stationDescription,
-                        pricePerKw = pricePerKw.toDoubleOrNull() ?: 0.0
+                        latitude = stationLatitude.toDoubleOrNull() ?: 0.0,
+                        longitude = stationLongitude.toDoubleOrNull() ?: 0.0,
+                        pricePerKw = pricePerKw.toDoubleOrNull() ?: 0.0,
+                        type = selectedType
                     )
-                    viewModel.signup(email, password, adminName, station) { success, error ->
+                    viewModel.signup(email, password, adminName, phoneNumber, station) { success, error ->
                         isLoading = false
                         if (success) {
                             navController.navigate(AdminScreen.Home.route) {

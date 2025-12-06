@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,6 +23,8 @@ import com.evcharging.app.ui.home.HomeScreen
 import com.evcharging.app.ui.navigation.NavigationScreen
 import com.evcharging.app.ui.theme.EVChargingAppTheme
 import com.evcharging.app.ui.tripplanner.TripPlannerScreen
+import com.evcharging.app.ui.support.UserSupportScreen
+import com.evcharging.app.ui.profile.ProfileScreen
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -32,15 +37,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            EVChargingAppTheme {
-                MainApp(authRepository)
+            var isDarkTheme by remember { mutableStateOf(true) }
+            
+            EVChargingAppTheme(darkTheme = isDarkTheme) {
+                MainApp(authRepository, isDarkTheme) { isDarkTheme = !isDarkTheme }
             }
         }
     }
 }
 
 @Composable
-fun MainApp(authRepository: AuthRepository) {
+fun MainApp(
+    authRepository: AuthRepository,
+    isDarkTheme: Boolean,
+    onThemeChange: () -> Unit
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -50,26 +61,10 @@ fun MainApp(authRepository: AuthRepository) {
 
     Scaffold(
         topBar = {
-            if (currentRoute in listOf("home", "navigation", "tripplanner")) {
-                com.evcharging.app.ui.components.TopBar(
-                    title = "EV Charging App",
-                    onLogoutClick = {
-                        authRepository.logout()
-                        navController.navigate("login") {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
-                    onProfileClick = {
-                        android.widget.Toast.makeText(context, "Profile Clicked", android.widget.Toast.LENGTH_SHORT).show()
-                    },
-                    onSettingsClick = {
-                        android.widget.Toast.makeText(context, "Settings Clicked", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                )
-            }
+            // Global TopBar removed as per specific requests for all main screens
         },
         bottomBar = {
-            if (currentRoute in listOf("home", "navigation", "tripplanner")) {
+            if (currentRoute in listOf("home", "navigation", "tripplanner", "wallet", "profile")) {
                 BottomNavigationBar(navController = navController)
             }
         }
@@ -81,7 +76,13 @@ fun MainApp(authRepository: AuthRepository) {
         ) {
             composable("login") { LoginScreen(navController) }
             composable("signup") { SignUpScreen(navController) }
-            composable("home") { HomeScreen(navController) }
+            composable("home") { 
+                HomeScreen(
+                    navController = navController, 
+                    isDarkTheme = isDarkTheme,
+                    onThemeChange = onThemeChange
+                ) 
+            }
             composable("navigation") { NavigationScreen() }
             composable("tripplanner") { TripPlannerScreen(navController) }
             composable(
@@ -92,6 +93,16 @@ fun MainApp(authRepository: AuthRepository) {
                 com.evcharging.app.ui.booking.BookingDetailScreen(navController, stationName)
             }
             composable("service_center") { com.evcharging.app.ui.service.ServiceCenterScreen(navController) }
+            composable("support") { com.evcharging.app.ui.support.UserSupportScreen(navController) }
+            composable("wallet") { com.evcharging.app.ui.wallet.WalletScreen(navController) }
+            composable("profile") { com.evcharging.app.ui.profile.ProfileScreen(navController) }
+            composable(
+                route = "charging/{bookingId}",
+                arguments = listOf(androidx.navigation.navArgument("bookingId") { type = androidx.navigation.NavType.StringType })
+            ) { backStackEntry ->
+                val bookingId = backStackEntry.arguments?.getString("bookingId") ?: ""
+                com.evcharging.app.ui.charging.ChargingScreen(navController, bookingId)
+            }
         }
     }
 }

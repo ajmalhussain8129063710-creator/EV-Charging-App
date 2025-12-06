@@ -20,5 +20,14 @@ fun AdminNavGraph(navController: NavHostController) {
         composable(AdminScreen.Home.route) {
             AdminHomeScreen(rootNavController = navController)
         }
+        composable(AdminScreen.Profile.route) {
+            com.evcharging.admin.ui.profile.AdminProfileScreen(navController = navController)
+        }
+        composable(AdminScreen.Settings.route) {
+            com.evcharging.admin.ui.settings.AdminSettingsScreen(navController = navController)
+        }
+        composable(AdminScreen.Support.route) {
+            com.evcharging.admin.ui.support.AdminSupportScreen(navController = navController)
+        }
     }
 }

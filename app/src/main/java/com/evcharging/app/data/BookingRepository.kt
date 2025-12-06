@@ -12,7 +12,7 @@ class BookingRepository @Inject constructor(
     private val auth: FirebaseAuth
 ) {
 
-    suspend fun createBooking(stationName: String, amount: String, paymentMethod: String): Result<Boolean> {
+    suspend fun createBooking(stationName: String, amount: String, paymentMethod: String, bookingDate: Long): Result<String> {
         return try {
             val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
             val booking = hashMapOf(
@@ -20,13 +20,191 @@ class BookingRepository @Inject constructor(
                 "stationName" to stationName,
                 "amount" to amount,
                 "paymentMethod" to paymentMethod,
+                "bookingDate" to bookingDate,
                 "timestamp" to System.currentTimeMillis(),
                 "status" to "Confirmed"
             )
-            firestore.collection("bookings").add(booking).await()
+            val docRef = firestore.collection("bookings").add(booking).await()
+            Result.success(docRef.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun createTransaction(transaction: com.evcharging.app.data.model.Transaction): Result<Boolean> {
+        return try {
+            val docRef = firestore.collection("transactions").document()
+            val transactionWithId = transaction.copy(id = docRef.id)
+            docRef.set(transactionWithId).await()
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+    suspend fun startCharging(bookingId: String): Result<Boolean> {
+        return try {
+            firestore.collection("bookings").document(bookingId).update("status", "Charging").await()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun completeBooking(bookingId: String): Result<Boolean> {
+        return try {
+            firestore.collection("bookings").document(bookingId).update("status", "Completed").await()
+            
+            val snapshot = firestore.collection("transactions")
+                .whereEqualTo("bookingId", bookingId)
+                .get()
+                .await()
+            
+            if (!snapshot.isEmpty) {
+                val docId = snapshot.documents[0].id
+                firestore.collection("transactions").document(docId).update("status", "COMPLETED").await()
+            }
+
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getChargingHistory(): Result<List<com.evcharging.app.data.model.Transaction>> {
+        return try {
+            val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
+            
+            // 1. Fetch Transactions
+            val transactionsSnapshot = firestore.collection("transactions")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+            val transactions = transactionsSnapshot.toObjects(com.evcharging.app.data.model.Transaction::class.java)
+
+            // 2. Fetch Bookings (for historical data)
+            val bookingsSnapshot = firestore.collection("bookings")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+                
+            val bookingTransactions = bookingsSnapshot.documents.mapNotNull { doc ->
+                try {
+                    val timestamp = doc.getLong("timestamp") ?: 0L
+                    val amountStr = doc.getString("amount") ?: "0.0"
+                    val amount = amountStr.toDoubleOrNull() ?: 0.0
+                    val bookingId = doc.id
+                    
+                    // Check if this booking already has a corresponding transaction
+                    if (transactions.any { it.bookingId == bookingId }) {
+                        null // Skip, prefer the explicit transaction record
+                    } else {
+                        com.evcharging.app.data.model.Transaction(
+                            id = bookingId,
+                            bookingId = bookingId,
+                            userId = userId,
+                            stationId = doc.getString("stationName") ?: "Unknown", // Temporarily use name as ID or placeholder
+                            amount = amount,
+                            type = com.evcharging.app.data.model.TransactionType.BOOKING,
+                            status = if (doc.getString("status") == "Cancelled") com.evcharging.app.data.model.TransactionStatus.FAILED else com.evcharging.app.data.model.TransactionStatus.COMPLETED,
+                            rrn = "BKG-${timestamp}",
+                            timestamp = com.google.firebase.Timestamp(java.util.Date(timestamp))
+                        )
+                    }
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            // 3. Merge and Sort
+            val allHistory = (transactions + bookingTransactions)
+                .sortedByDescending { it.timestamp.seconds }
+
+            Result.success(allHistory)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun cancelBooking(bookingId: String): Result<Boolean> {
+        return try {
+            val bookingDoc = firestore.collection("bookings").document(bookingId).get().await()
+            val userId = bookingDoc.getString("userId") ?: return Result.failure(Exception("User not found"))
+            val amount = bookingDoc.getString("amount")?.toDoubleOrNull() ?: 0.0
+            val paymentMethod = bookingDoc.getString("paymentMethod") ?: "Card"
+
+            // 1. Update Booking Status
+            firestore.collection("bookings").document(bookingId).update("status", "Cancelled").await()
+
+            // 2. Refund Wallet if applicable
+            if (paymentMethod == "Wallet" && amount > 0) {
+                 firestore.runTransaction { transaction ->
+                    val userRef = firestore.collection("users").document(userId)
+                    val snapshot = transaction.get(userRef)
+                    val currentBalance = snapshot.getDouble("walletBalance") ?: 0.0
+                    transaction.update(userRef, "walletBalance", currentBalance + amount)
+                }.await()
+
+                // 3. Create Refund Transaction
+                val transactionId = java.util.UUID.randomUUID().toString()
+                val refundTransaction = hashMapOf(
+                    "id" to transactionId,
+                    "bookingId" to bookingId,
+                    "userId" to userId,
+                    "amount" to amount,
+                    "type" to "REFUND",
+                    "status" to "COMPLETED",
+                    "timestamp" to com.google.firebase.Timestamp.now()
+                )
+                firestore.collection("transactions").document(transactionId).set(refundTransaction).await()
+            }
+
+            // 4. Update original transaction status to refunded
+            val snapshot = firestore.collection("transactions")
+                .whereEqualTo("bookingId", bookingId)
+                .whereEqualTo("type", "BOOKING")
+                .get()
+                .await()
+            
+            if (!snapshot.isEmpty) {
+                val docId = snapshot.documents[0].id
+                firestore.collection("transactions").document(docId).update("status", "REFUNDED").await()
+            }
+
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getUserPoints(): Result<Int> {
+        return try {
+            val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
+            val snapshot = firestore.collection("users").document(userId).get().await()
+            val points = snapshot.getLong("points")?.toInt() ?: 0
+            Result.success(points)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getUserBookings(): Result<List<Map<String, Any>>> {
+        return try {
+            val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
+            val snapshot = firestore.collection("bookings")
+                .whereEqualTo("userId", userId)
+                .whereIn("status", listOf("Confirmed", "Charging"))
+                .get()
+                .await()
+            
+            val bookings = snapshot.documents.map { doc ->
+                doc.data!!.plus("id" to doc.id)
+            }.sortedByDescending { it["timestamp"] as? Long ?: 0L }
+            
+            Result.success(bookings)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
+

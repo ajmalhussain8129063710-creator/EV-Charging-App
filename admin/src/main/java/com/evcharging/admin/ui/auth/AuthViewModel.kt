@@ -20,15 +20,30 @@ class AuthViewModel @Inject constructor(
     fun login(email: String, pass: String, onResult: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
             try {
-                auth.signInWithEmailAndPassword(email, pass).await()
-                onResult(true, null)
+                val result = auth.signInWithEmailAndPassword(email, pass).await()
+                val user = result.user
+                if (user != null) {
+                    val adminDoc = firestore.collection("admins").document(user.uid).get().await()
+                    if (adminDoc.exists()) {
+                        onResult(true, null)
+                    } else {
+                        auth.signOut()
+                        onResult(false, "Access Denied: Not an Admin account.")
+                    }
+                } else {
+                    onResult(false, "Login failed.")
+                }
+            } catch (e: com.google.firebase.auth.FirebaseAuthInvalidCredentialsException) {
+                onResult(false, "Incorrect email or password.")
+            } catch (e: com.google.firebase.auth.FirebaseAuthInvalidUserException) {
+                onResult(false, "No account found with this email.")
             } catch (e: Exception) {
-                onResult(false, e.message)
+                onResult(false, "Login failed: ${e.localizedMessage}")
             }
         }
     }
 
-    fun signup(email: String, pass: String, name: String, station: Station, onResult: (Boolean, String?) -> Unit) {
+    fun signup(email: String, pass: String, name: String, phoneNumber: String, station: Station, onResult: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
             try {
                 // 1. Create Auth User
@@ -46,6 +61,7 @@ class AuthViewModel @Inject constructor(
                     id = userId,
                     name = name,
                     email = email,
+                    phoneNumber = phoneNumber,
                     stationId = stationId
                 )
                 firestore.collection("admins").document(userId).set(adminUser).await()

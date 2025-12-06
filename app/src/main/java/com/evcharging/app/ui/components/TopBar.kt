@@ -12,7 +12,8 @@ fun TopBar(
     title: String,
     onLogoutClick: () -> Unit,
     onProfileClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onSupportClick: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -38,6 +39,13 @@ fun TopBar(
                     onClick = {
                         showMenu = false
                         onSettingsClick()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Help & Support") },
+                    onClick = {
+                        showMenu = false
+                        onSupportClick()
                     }
                 )
                 DropdownMenuItem(

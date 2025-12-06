@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import kotlinx.coroutines.Dispatchers
+
 @HiltViewModel
 class TripPlannerViewModel @Inject constructor(
     private val repository: StationRepository,
@@ -30,7 +32,7 @@ class TripPlannerViewModel @Inject constructor(
     val locationSuggestions: StateFlow<List<PlacePrediction>> = _locationSuggestions
 
     fun searchLocation(query: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (query.length > 2) {
                 _locationSuggestions.value = placesRepository.searchPlaces(query)
             } else {
@@ -44,7 +46,7 @@ class TripPlannerViewModel @Inject constructor(
     }
 
     fun planTrip(start: String, destination: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
             
             try {
@@ -75,7 +77,7 @@ class TripPlannerViewModel @Inject constructor(
                         if (result.isSuccess) {
                             val allStations = result.getOrThrow()
                             var filteredStations = repository.filterStationsAlongRoute(
-                                allStations, startLat, startLon, destLat, destLon
+                                allStations, startLat, startLon, destLat, destLon, bufferKm = 5.0
                             )
                             
                             // Fallback: If no stations found along route, generate synthetic ones for demo purposes
@@ -180,9 +182,32 @@ class TripPlannerViewModel @Inject constructor(
         return stations
     }
 
+    private val _upcomingBookings = MutableStateFlow<List<Map<String, Any>>>(emptyList())
+    val upcomingBookings: StateFlow<List<Map<String, Any>>> = _upcomingBookings
+
+    init {
+        loadBookings()
+    }
+
+    fun loadBookings() {
+        viewModelScope.launch {
+            val result = bookingRepository.getUserBookings()
+            _upcomingBookings.value = result.getOrDefault(emptyList())
+        }
+    }
+
+    fun cancelBooking(bookingId: String) {
+        viewModelScope.launch {
+            val result = bookingRepository.cancelBooking(bookingId)
+            if (result.isSuccess) {
+                loadBookings() // Refresh list
+            }
+        }
+    }
+
     fun bookStation(stationName: String, paymentMethod: String) {
         viewModelScope.launch {
-            val result = bookingRepository.createBooking(stationName, "15.00", paymentMethod)
+            val result = bookingRepository.createBooking(stationName, "15.00", paymentMethod, System.currentTimeMillis())
             if (result.isSuccess) {
                 // Update local state to reflect booking
                 _tripResult.value = _tripResult.value?.copy(
@@ -190,6 +215,7 @@ class TripPlannerViewModel @Inject constructor(
                         if (it.name == stationName) it.copy(isBooked = true) else it
                     }
                 )
+                loadBookings() // Refresh upcoming bookings
             }
         }
     }

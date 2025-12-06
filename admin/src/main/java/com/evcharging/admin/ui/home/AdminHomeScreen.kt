@@ -46,8 +46,18 @@ fun AdminHomeScreen(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
-                        DropdownMenuItem(text = { Text("Profile") }, onClick = { /* TODO */ showMenu = false })
-                        DropdownMenuItem(text = { Text("Settings") }, onClick = { /* TODO */ showMenu = false })
+                        DropdownMenuItem(text = { Text("Profile") }, onClick = { 
+                            rootNavController.navigate(AdminScreen.Profile.route)
+                            showMenu = false 
+                        })
+                        DropdownMenuItem(text = { Text("Settings") }, onClick = { 
+                            rootNavController.navigate(AdminScreen.Settings.route)
+                            showMenu = false 
+                        })
+                        DropdownMenuItem(text = { Text("Help & Support") }, onClick = { 
+                            rootNavController.navigate(AdminScreen.Support.route)
+                            showMenu = false 
+                        })
                         DropdownMenuItem(text = { Text("Logout") }, onClick = {
                             rootNavController.navigate(AdminScreen.Login.route) {
                                 popUpTo(AdminScreen.Home.route) { inclusive = true }
@@ -145,7 +155,7 @@ fun AdminHomeScreen(
         Box(modifier = Modifier.padding(innerPadding)) {
             NavHost(navController = homeNavController, startDestination = AdminScreen.Home.route) {
                 composable(AdminScreen.Home.route) { DashboardContent() }
-                composable(AdminScreen.Wallet.route) { WalletScreen() }
+                composable(AdminScreen.Wallet.route) { com.evcharging.admin.ui.wallet.AdminWalletScreen(navController = homeNavController) }
                 composable(AdminScreen.Dining.route) { DiningScreen() }
                 composable(AdminScreen.Promotions.route) { PromotionsScreen() }
             }

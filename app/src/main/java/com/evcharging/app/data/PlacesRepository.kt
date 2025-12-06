@@ -8,6 +8,8 @@ import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,7 +17,7 @@ import javax.inject.Singleton
 class PlacesRepository @Inject constructor(
     private val placesClient: PlacesClient
 ) {
-    suspend fun searchPlaces(query: String, location: LatLng? = null): List<PlacePrediction> {
+    suspend fun searchPlaces(query: String, location: LatLng? = null): List<PlacePrediction> = withContext(Dispatchers.IO) {
         val token = AutocompleteSessionToken.newInstance()
         val requestBuilder = FindAutocompletePredictionsRequest.builder()
             .setSessionToken(token)
@@ -30,7 +32,7 @@ class PlacesRepository @Inject constructor(
             requestBuilder.setLocationBias(bias)
         }
 
-        return try {
+        try {
             val response = placesClient.findAutocompletePredictions(requestBuilder.build()).await()
             response.autocompletePredictions.map { 
                 PlacePrediction(it.placeId, it.getPrimaryText(null).toString(), it.getSecondaryText(null).toString())
@@ -41,10 +43,10 @@ class PlacesRepository @Inject constructor(
         }
     }
 
-    suspend fun getPlaceDetails(placeId: String): Place? {
+    suspend fun getPlaceDetails(placeId: String): Place? = withContext(Dispatchers.IO) {
         val placeFields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS)
         val request = FetchPlaceRequest.newInstance(placeId, placeFields)
-        return try {
+        try {
             val response = placesClient.fetchPlace(request).await()
             response.place
         } catch (e: Exception) {

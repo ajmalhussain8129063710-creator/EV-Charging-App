@@ -24,24 +24,18 @@ fun SearchableDropdown(
     label: String,
     items: List<String>,
     selectedItem: String,
-    onItemSelected: (String) -> Unit
+    onItemSelected: (String) -> Unit,
+    onValueChange: ((String) -> Unit)? = null // Optional callback for free text input
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var searchText by remember { mutableStateOf(selectedItem) }
     val focusManager = LocalFocusManager.current
 
-    // Filter items based on search text
-    val filteredItems = remember(searchText, items) {
-        if (searchText.isBlank()) {
-            items
+    // Filter items based on selectedItem (which acts as search text)
+    val filteredItems = remember(selectedItem, items) {
+        if (selectedItem.isBlank()) {
+            emptyList() // Hide list if search is empty (Search Engine style)
         } else {
-            items.filter { it.contains(searchText, ignoreCase = true) }
-        }
-    }
-
-    LaunchedEffect(selectedItem) {
-        if (selectedItem != searchText) {
-            searchText = selectedItem
+            items.filter { it.contains(selectedItem, ignoreCase = true) }
         }
     }
 
@@ -51,10 +45,10 @@ fun SearchableDropdown(
         modifier = modifier
     ) {
         OutlinedTextField(
-            value = searchText,
+            value = selectedItem,
             onValueChange = { 
-                searchText = it
-                expanded = true 
+                expanded = true
+                onValueChange?.invoke(it) // Propagate text change
             },
             label = { Text(label) },
             trailingIcon = {
@@ -66,18 +60,17 @@ fun SearchableDropdown(
                 .menuAnchor()
         )
 
-        if (filteredItems.isNotEmpty()) {
+        if (filteredItems.isNotEmpty() && expanded) {
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.heightIn(max = 200.dp)
+                modifier = Modifier.heightIn(max = 400.dp)
             ) {
                 filteredItems.forEach { item ->
                     DropdownMenuItem(
                         text = { Text(text = item) },
                         onClick = {
                             onItemSelected(item)
-                            searchText = item
                             expanded = false
                             focusManager.clearFocus()
                         }
