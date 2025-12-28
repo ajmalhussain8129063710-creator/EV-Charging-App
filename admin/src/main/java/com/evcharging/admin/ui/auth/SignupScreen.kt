@@ -1,6 +1,7 @@
 package com.evcharging.admin.ui.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,7 +27,15 @@ import com.evcharging.admin.model.Station
 import com.evcharging.admin.ui.navigation.AdminScreen
 import com.evcharging.admin.ui.theme.GradientEnd
 import com.evcharging.admin.ui.theme.GradientStart
+import com.evcharging.admin.ui.theme.GradientEnd
+import com.evcharging.admin.ui.theme.GradientStart
 import com.evcharging.admin.ui.components.AddressAutocomplete
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
+import android.net.Uri
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,12 +47,16 @@ fun SignupScreen(
     var adminName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
+
+    // Station Details
+    var selectedType by remember { mutableStateOf("Charging Station") }
 
     // Station Details
     var stationName by remember { mutableStateOf("") }
     var stationLocation by remember { mutableStateOf("") }
-    var stationImageUrl by remember { mutableStateOf("") }
-    var stationVideoUrl by remember { mutableStateOf("") }
+    var stationImageUri by remember { mutableStateOf<Uri?>(null) }
+    var stationVideoUri by remember { mutableStateOf<Uri?>(null) }
     var stationDescription by remember { mutableStateOf("") }
     var stationLatitude by remember { mutableStateOf("") }
     var stationLongitude by remember { mutableStateOf("") }
@@ -86,7 +99,9 @@ fun SignupScreen(
                         label = { Text("Full Name") },
                         leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -94,19 +109,21 @@ fun SignupScreen(
                         label = { Text("Email") },
                         leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                         shape = RoundedCornerShape(12.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    var phoneNumber by remember { mutableStateOf("") }
+
                     OutlinedTextField(
                         value = phoneNumber, onValueChange = { phoneNumber = it },
                         label = { Text("Phone Number") },
                         leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                         shape = RoundedCornerShape(12.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -116,8 +133,9 @@ fun SignupScreen(
                         leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                         shape = RoundedCornerShape(12.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next)
                     )
                 }
             }
@@ -134,18 +152,25 @@ fun SignupScreen(
                     Text("Station Details", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.secondary)
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    val stationNameLabel = when (selectedType) {
+                        "Dining" -> "Restaurant Name"
+                        "Service Center" -> "Service Center Name"
+                        else -> "Station Name"
+                    }
                     OutlinedTextField(
                         value = stationName, onValueChange = { stationName = it },
-                        label = { Text("Station Name") },
+                        label = { Text(stationNameLabel) },
                         leadingIcon = { Icon(Icons.Default.EvStation, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     // Facility Type Dropdown
                     var expanded by remember { mutableStateOf(false) }
-                    var selectedType by remember { mutableStateOf("Charging Station") }
+
                     val types = listOf("Charging Station", "Dining", "Service Center")
 
                     ExposedDropdownMenuBox(
@@ -160,6 +185,7 @@ fun SignupScreen(
                             label = { Text("Facility Type") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            singleLine = true,
                             shape = RoundedCornerShape(12.dp)
                         )
                         ExposedDropdownMenu(
@@ -191,20 +217,78 @@ fun SignupScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+    
+                    // Image Picker
+                    val imagePickerLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.PickVisualMedia()
+                    ) { uri -> stationImageUri = uri }
+
+                    val imageLabel = if (selectedType == "Charging Station") "Station Image" else "Gallery Image"
+                    
                     OutlinedTextField(
-                        value = stationImageUrl, onValueChange = { stationImageUrl = it },
-                        label = { Text("Image URL") },
+                        value = stationImageUri?.lastPathSegment ?: "No file selected",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(imageLabel) },
                         leadingIcon = { Icon(Icons.Default.Image, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        trailingIcon = {
+                            IconButton(onClick = { 
+                                imagePickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            }) {
+                                Icon(Icons.Default.AttachFile, contentDescription = "Select Image")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().clickable { 
+                             imagePickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        },
+                        enabled = false, // Read only, click handles it
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Video Picker
+                    val videoPickerLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.GetContent()
+                    ) { uri -> stationVideoUri = uri }
+
+                    val videoLabel = if (selectedType == "Charging Station") "Station Video (Optional)" else "Gallery Video (Optional)"
+                    
                     OutlinedTextField(
-                        value = stationVideoUrl, onValueChange = { stationVideoUrl = it },
-                        label = { Text("Video URL (Optional)") },
+                        value = stationVideoUri?.lastPathSegment ?: "No file selected",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(videoLabel) },
                         leadingIcon = { Icon(Icons.Default.Videocam, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        trailingIcon = {
+                             IconButton(onClick = { 
+                                videoPickerLauncher.launch("video/*")
+                            }) {
+                                Icon(Icons.Default.AttachFile, contentDescription = "Select Video")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().clickable { 
+                            videoPickerLauncher.launch("video/*")
+                        },
+                        enabled = false,
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -214,17 +298,50 @@ fun SignupScreen(
                         label = { Text("Description") },
                         leadingIcon = { Icon(Icons.Default.Description, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = pricePerKw, onValueChange = { pricePerKw = it },
-                        label = { Text("Price per kW") },
-                        leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
+                    if (selectedType == "Charging Station") {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = pricePerKw, onValueChange = { pricePerKw = it },
+                            label = { Text("Price per kW") },
+                            leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                            keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                                onDone = {
+                                    // Trigger signup
+                                     isLoading = true
+                                    val station = Station(
+                                        name = stationName,
+                                        address = stationLocation,
+                                        imageUrl = "", 
+                                        videoUrl = "", 
+                                        description = stationDescription,
+                                        latitude = stationLatitude.toDoubleOrNull() ?: 0.0,
+                                        longitude = stationLongitude.toDoubleOrNull() ?: 0.0,
+                                        pricePerKw = pricePerKw.toDoubleOrNull() ?: 0.0,
+                                        type = selectedType
+                                    )
+                                    viewModel.signup(email, password, adminName, phoneNumber, station, stationImageUri, stationVideoUri) { success, error ->
+                                        isLoading = false
+                                        if (success) {
+                                            navController.navigate(AdminScreen.Home.route) {
+                                                popUpTo(AdminScreen.Login.route) { inclusive = true }
+                                            }
+                                        } else {
+                                            errorMessage = error
+                                        }
+                                    }
+                                }
+                            )
+                        )
+                    }
                 }
             }
 
@@ -242,15 +359,16 @@ fun SignupScreen(
                     val station = Station(
                         name = stationName,
                         address = stationLocation,
-                        imageUrl = stationImageUrl,
-                        videoUrl = stationVideoUrl,
+                        imageUrl = "", // Will be updated in ViewModel
+                        videoUrl = "", // Will be updated in ViewModel
                         description = stationDescription,
                         latitude = stationLatitude.toDoubleOrNull() ?: 0.0,
                         longitude = stationLongitude.toDoubleOrNull() ?: 0.0,
                         pricePerKw = pricePerKw.toDoubleOrNull() ?: 0.0,
+
                         type = selectedType
                     )
-                    viewModel.signup(email, password, adminName, phoneNumber, station) { success, error ->
+                    viewModel.signup(email, password, adminName, phoneNumber, station, stationImageUri, stationVideoUri) { success, error ->
                         isLoading = false
                         if (success) {
                             navController.navigate(AdminScreen.Home.route) {

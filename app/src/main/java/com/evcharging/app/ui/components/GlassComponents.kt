@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.evcharging.app.ui.theme.*
@@ -27,11 +28,27 @@ fun GlassCard(
     shape: Shape = RoundedCornerShape(24.dp),
     content: @Composable ColumnScope.() -> Unit
 ) {
+    // Determine colors based on theme (using background luminance or simply surfaceVariant if properly mapped)
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    
+    val containerColor = if (isLight) {
+        Color.White.copy(alpha = 0.7f) // Frosted White for Light Mode
+    } else {
+        GlassSurface // 10% White for Dark Mode
+    }
+    
+    val borderColor = if (isLight) {
+        Color.White.copy(alpha = 0.9f)
+    } else {
+        GlassWhite
+    }
+
     Surface(
         modifier = modifier,
-        color = GlassSurface, // Very transparent
+        color = containerColor,
         shape = shape,
-        border = BorderStroke(1.dp, Brush.linearGradient(listOf(GlassWhite, Color.Transparent))), // Subtle glass border
+        border = BorderStroke(1.dp, Brush.linearGradient(listOf(borderColor, Color.Transparent))),
+        shadowElevation = if (isLight) 8.dp else 0.dp // Add shadow for light mode to pop
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -62,7 +79,7 @@ fun NeonButton(
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
-            color = DeepBackground // High contrast text on neon
+            color = MaterialTheme.colorScheme.onPrimary // High contrast text
         )
     }
 }

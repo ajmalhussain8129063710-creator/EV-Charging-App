@@ -8,12 +8,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminSettingsScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: AdminSettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
+    val isDarkTheme by viewModel.isDarkTheme.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -44,7 +49,12 @@ fun AdminSettingsScreen(
             ListItem(
                 headlineContent = { Text("Dark Mode") },
                 supportingContent = { Text("Toggle dark theme") },
-                trailingContent = { Switch(checked = false, onCheckedChange = {}) }
+                trailingContent = { 
+                    Switch(
+                        checked = isDarkTheme, 
+                        onCheckedChange = { viewModel.toggleTheme(it) }
+                    ) 
+                }
             )
             Divider()
             ListItem(

@@ -37,294 +37,308 @@ fun TripPlannerScreen(
     val scope = rememberCoroutineScope()
 
     if (showPaymentDialog && selectedStation != null) {
-        PaymentDialog(
-            stationName = selectedStation!!.name,
-            amount = "$15.00",
-            onDismiss = { showPaymentDialog = false },
-            onConfirm = { paymentMethod ->
-                viewModel.bookStation(selectedStation!!.name, paymentMethod)
-                showPaymentDialog = false
-            }
-        )
-    }
-
-    // Voice Alert Simulation Popup
-    if (showVoiceAlert) {
-        Dialog(onDismissRequest = { showVoiceAlert = false }) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Warning, contentDescription = "Alert", tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = voiceAlertMessage, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            PaymentDialog(
+                stationName = selectedStation!!.name,
+                amount = "$15.00",
+                onDismiss = { showPaymentDialog = false },
+                onConfirm = { paymentMethod ->
+                    viewModel.bookStation(selectedStation!!.name, paymentMethod)
+                    showPaymentDialog = false
                 }
-            }
+            )
         }
-    }
 
-    Scaffold(
-        floatingActionButton = {
-            VoiceAssistantButton { command ->
-                if (command.contains("plan trip to", ignoreCase = true)) {
-                    val dest = command.substringAfter("plan trip to").trim()
-                    destination = dest
-                    viewModel.planTrip(startLocation, dest)
-                }
-            }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Trip Planner", style = MaterialTheme.typography.headlineMedium, color = com.evcharging.app.ui.theme.NeonCyan)
-            
-            // Upcoming Bookings Section
-            val upcomingBookings by viewModel.upcomingBookings.collectAsState()
-            var bookingToCancel by remember { mutableStateOf<String?>(null) } // Booking ID
-
-            if (upcomingBookings.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(24.dp))
-                Text("Upcoming Bookings", style = MaterialTheme.typography.titleLarge, color = com.evcharging.app.ui.theme.NeonGreen, modifier = Modifier.align(Alignment.Start))
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                upcomingBookings.forEach { booking ->
-                    com.evcharging.app.ui.components.GlassCard(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { 
-                            bookingToCancel = booking["id"] as String
-                        }
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(booking["stationName"] as String, style = MaterialTheme.typography.titleMedium, color = com.evcharging.app.ui.theme.TextPrimary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) // Updated color
-                                Text("Payment: ${booking["paymentMethod"]}", style = MaterialTheme.typography.bodySmall, color = com.evcharging.app.ui.theme.TextSecondary) // Updated color
-                            }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text("Confirmed", color = com.evcharging.app.ui.theme.NeonGreen, style = MaterialTheme.typography.labelMedium)
-                                Text("$${booking["amount"]}", color = com.evcharging.app.ui.theme.NeonCyan, style = MaterialTheme.typography.titleMedium)
-                            }
-                        }
-                    }
-                }
-                
-                if (bookingToCancel != null) {
-                    AlertDialog(
-                        onDismissRequest = { bookingToCancel = null },
-                        title = { Text("Cancel Booking?") },
-                        text = { Text("Are you sure you want to cancel this booking? A refund will be processed.") },
-                        confirmButton = {
-                            Button(
-                                onClick = { 
-                                    viewModel.cancelBooking(bookingToCancel!!)
-                                    bookingToCancel = null
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = com.evcharging.app.ui.theme.NeonRed)
-                            ) {
-                                Text("Cancel Booking")
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { bookingToCancel = null }) {
-                                Text("Keep")
-                            }
-                        },
-                        containerColor = com.evcharging.app.ui.theme.DeepBackground,
-                        titleContentColor = com.evcharging.app.ui.theme.TextPrimary,
-                        textContentColor = com.evcharging.app.ui.theme.TextSecondary
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-
-            val suggestions by viewModel.locationSuggestions.collectAsState()
-            var activeField by remember { mutableStateOf<String?>(null) }
-
-            // Start Location Field
-            Column {
-                OutlinedTextField(
-                    value = startLocation,
-                    onValueChange = { 
-                        startLocation = it
-                        activeField = "start"
-                        viewModel.searchLocation(it)
-                    },
-                    label = { Text("Start Location") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = com.evcharging.app.ui.theme.NeonCyan,
-                        unfocusedBorderColor = com.evcharging.app.ui.theme.TextSecondary,
-                        focusedLabelColor = com.evcharging.app.ui.theme.NeonCyan,
-                        unfocusedLabelColor = com.evcharging.app.ui.theme.TextSecondary,
-                        cursorColor = com.evcharging.app.ui.theme.NeonCyan,
-                        focusedTextColor = com.evcharging.app.ui.theme.TextPrimary,
-                        unfocusedTextColor = com.evcharging.app.ui.theme.TextPrimary
-                    )
-                )
-                if (activeField == "start" && suggestions.isNotEmpty()) {
-                    androidx.compose.foundation.lazy.LazyColumn(
-                        modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp).background(MaterialTheme.colorScheme.surface)
-                    ) {
-                        items(suggestions.size) { index ->
-                            val prediction = suggestions[index]
-                            DropdownMenuItem(
-                                text = { Text(prediction.primaryText, color = Color.White) },
-                                onClick = { 
-                                    startLocation = prediction.primaryText
-                                    viewModel.clearSuggestions()
-                                    activeField = null
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Destination Field
-            Column {
-                OutlinedTextField(
-                    value = destination,
-                    onValueChange = { 
-                        destination = it
-                        activeField = "dest"
-                        viewModel.searchLocation(it)
-                    },
-                    label = { Text("Destination") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = com.evcharging.app.ui.theme.NeonCyan,
-                        unfocusedBorderColor = com.evcharging.app.ui.theme.TextSecondary,
-                        focusedLabelColor = com.evcharging.app.ui.theme.NeonCyan,
-                        unfocusedLabelColor = com.evcharging.app.ui.theme.TextSecondary,
-                        cursorColor = com.evcharging.app.ui.theme.NeonCyan,
-                        focusedTextColor = com.evcharging.app.ui.theme.TextPrimary,
-                        unfocusedTextColor = com.evcharging.app.ui.theme.TextPrimary
-                    )
-                )
-                if (activeField == "dest" && suggestions.isNotEmpty()) {
-                    androidx.compose.foundation.lazy.LazyColumn(
-                        modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp).background(MaterialTheme.colorScheme.surface)
-                    ) {
-                        items(suggestions.size) { index ->
-                            val prediction = suggestions[index]
-                            DropdownMenuItem(
-                                text = { Text(prediction.primaryText, color = Color.White) },
-                                onClick = { 
-                                    destination = prediction.primaryText
-                                    viewModel.clearSuggestions()
-                                    activeField = null
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    viewModel.planTrip(startLocation, destination)
-                },
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
-                } else {
-                    Text("Plan Trip")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (tripResult != null) {
-                Button(
-                    onClick = {
-                        scope.launch {
-                            val nextStation = tripResult?.chargingStops?.firstOrNull()?.name ?: "Unknown Station"
-                            voiceAlertMessage = "Voice Assistant: Next charging station is $nextStation in 15km. Battery at ${tripResult?.batteryUsage}."
-                            showVoiceAlert = true
-                            delay(4000)
-                            showVoiceAlert = false
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Simulate Trip (Voice Alert)")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            tripResult?.let { result ->
+        // Voice Alert Simulation Popup
+        if (showVoiceAlert) {
+            Dialog(onDismissRequest = { showVoiceAlert = false }) {
                 Card(
-                    modifier = Modifier.fillMaxWidth()
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Trip Details", style = MaterialTheme.typography.titleLarge)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Distance: ${result.distance}")
-                        Text("Est. Battery Usage: ${result.batteryUsage}")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Suggested Charging Stops:", style = MaterialTheme.typography.titleMedium)
-                        
-                        result.chargingStops.forEach { station ->
-                            Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Warning, contentDescription = "Alert", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(text = voiceAlertMessage, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                }
+            }
+        }
+
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            floatingActionButton = {
+                VoiceAssistantButton { command ->
+                    if (command.contains("plan trip to", ignoreCase = true)) {
+                        val dest = command.substringAfter("plan trip to").trim()
+                        destination = dest
+                        viewModel.planTrip(startLocation, dest)
+                    }
+                }
+            }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "Trip Planner", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+                
+                // Upcoming Bookings Section
+                val upcomingBookings by viewModel.upcomingBookings.collectAsState()
+                var bookingToCancel by remember { mutableStateOf<String?>(null) } // Booking ID
+
+                if (upcomingBookings.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("Upcoming Bookings", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.align(Alignment.Start))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    upcomingBookings.forEach { booking ->
+                        com.evcharging.app.ui.components.GlassCard(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { 
+                                bookingToCancel = booking["id"] as String
+                            }
+                        ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().padding(8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text("• ${station.name} (${station.distance})")
-                                    if (station.isBooked) {
-                                        Text("Booked", color = Color.Green, style = MaterialTheme.typography.labelSmall)
-                                    }
+                                    Text(booking["stationName"] as String, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                    Text("Payment: ${booking["paymentMethod"]}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
-                                if (station.isAvailable && !station.isBooked) {
-                                    Button(
-                                        onClick = {
-                                            // Navigate to Booking Detail Screen
-                                            navController.navigate("booking_detail/${station.name}")
-                                        },
-                                        modifier = Modifier.height(36.dp),
-                                        contentPadding = PaddingValues(horizontal = 8.dp)
-                                    ) {
-                                        Text("Book", style = MaterialTheme.typography.labelMedium)
-                                    }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text("Confirmed", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.labelMedium)
+                                    Text("$${booking["amount"]}", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleMedium)
                                 }
                             }
                         }
+                    }
+                    
+                    if (bookingToCancel != null) {
+                        AlertDialog(
+                            onDismissRequest = { bookingToCancel = null },
+                            title = { Text("Cancel Booking?") },
+                            text = { Text("Are you sure you want to cancel this booking? A refund will be processed.") },
+                            confirmButton = {
+                                Button(
+                                    onClick = { 
+                                        viewModel.cancelBooking(bookingToCancel!!)
+                                        bookingToCancel = null
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                ) {
+                                    Text("Cancel Booking")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { bookingToCancel = null }) {
+                                    Text("Keep")
+                                }
+                            },
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            titleContentColor = MaterialTheme.colorScheme.onSurface,
+                            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
 
-                        if (result.steps.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text("Route Details:", style = MaterialTheme.typography.titleMedium)
+                val suggestions by viewModel.locationSuggestions.collectAsState()
+                var activeField by remember { mutableStateOf<String?>(null) }
+
+                // Start Location Field
+                Column {
+                    OutlinedTextField(
+                        value = startLocation,
+                        onValueChange = { 
+                            startLocation = it
+                            activeField = "start"
+                            viewModel.searchLocation(it)
+                        },
+                        label = { Text("Start Location") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                    if (activeField == "start" && suggestions.isNotEmpty()) {
+                        androidx.compose.foundation.lazy.LazyColumn(
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp).background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            items(suggestions.size) { index ->
+                                val prediction = suggestions[index]
+                                DropdownMenuItem(
+                                    text = { Text(prediction.primaryText, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                                    onClick = { 
+                                        startLocation = prediction.primaryText
+                                        viewModel.clearSuggestions()
+                                        activeField = null
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Destination Field
+                Column {
+                    OutlinedTextField(
+                        value = destination,
+                        onValueChange = { 
+                            destination = it
+                            activeField = "dest"
+                            viewModel.searchLocation(it)
+                        },
+                        label = { Text("Destination") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Search
+                        ),
+                        keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                            onSearch = {
+                                viewModel.planTrip(startLocation, destination)
+                            }
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                    if (activeField == "dest" && suggestions.isNotEmpty()) {
+                        androidx.compose.foundation.lazy.LazyColumn(
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp).background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            items(suggestions.size) { index ->
+                                val prediction = suggestions[index]
+                                DropdownMenuItem(
+                                    text = { Text(prediction.primaryText, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                                    onClick = { 
+                                        destination = prediction.primaryText
+                                        viewModel.clearSuggestions()
+                                        activeField = null
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        viewModel.planTrip(startLocation, destination)
+                    },
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
+                    } else {
+                        Text("Plan Trip")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (tripResult != null) {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val nextStation = tripResult?.chargingStops?.firstOrNull()?.name ?: "Unknown Station"
+                                voiceAlertMessage = "Voice Assistant: Next charging station is $nextStation in 15km. Battery at ${tripResult?.batteryUsage}."
+                                showVoiceAlert = true
+                                delay(4000)
+                                showVoiceAlert = false
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Simulate Trip (Voice Alert)")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                tripResult?.let { result ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("Trip Details", style = MaterialTheme.typography.titleLarge)
                             Spacer(modifier = Modifier.height(8.dp))
-                            result.steps.forEachIndexed { index, step ->
-                                Text("${index + 1}. $step", style = MaterialTheme.typography.bodyMedium)
+                            Text("Distance: ${result.distance}")
+                            Text("Est. Battery Usage: ${result.batteryUsage}")
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Suggested Charging Stops:", style = MaterialTheme.typography.titleMedium)
+                            
+                            result.chargingStops.forEach { station ->
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text("• ${station.name} (${station.distance})")
+                                        if (station.isBooked) {
+                                            Text("Booked", color = Color.Green, style = MaterialTheme.typography.labelSmall)
+                                        }
+                                    }
+                                    if (station.isAvailable && !station.isBooked) {
+                                        Button(
+                                            onClick = {
+                                                // Navigate to Booking Detail Screen
+                                                navController.navigate("booking_detail/${station.name}")
+                                            },
+                                            modifier = Modifier.height(36.dp),
+                                            contentPadding = PaddingValues(horizontal = 8.dp)
+                                        ) {
+                                            Text("Book", style = MaterialTheme.typography.labelMedium)
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (result.steps.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text("Route Details:", style = MaterialTheme.typography.titleMedium)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                result.steps.forEachIndexed { index, step ->
+                                    Text("${index + 1}. $step", style = MaterialTheme.typography.bodyMedium)
+                                }
                             }
                         }
                     }
                 }
             }
-        }
     }
 }
 

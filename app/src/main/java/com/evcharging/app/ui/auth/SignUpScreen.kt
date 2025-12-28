@@ -84,12 +84,16 @@ fun SignUpScreen(
                         onValueChange = { name = it },
                         label = { Text("User Name") },
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = NeonCyan,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             focusedLabelColor = NeonCyan,
                             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             cursorColor = NeonCyan
+                        ),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
                         )
                     )
 
@@ -100,12 +104,16 @@ fun SignUpScreen(
                         onValueChange = { email = it },
                         label = { Text("Email or Phone Number") },
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = NeonCyan,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             focusedLabelColor = NeonCyan,
                             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             cursorColor = NeonCyan
+                        ),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
                         )
                     )
 
@@ -116,8 +124,12 @@ fun SignUpScreen(
                         value = phoneNumber,
                         onValueChange = { phoneNumber = it },
                         label = { Text("Alternative Phone Number (Optional)") },
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = KeyboardType.Phone,
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                        ),
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = NeonCyan,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
@@ -135,12 +147,17 @@ fun SignUpScreen(
                         label = { Text("Password") },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = NeonCyan,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             focusedLabelColor = NeonCyan,
                             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             cursorColor = NeonCyan
+                        ),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Done
                         )
                     )
 

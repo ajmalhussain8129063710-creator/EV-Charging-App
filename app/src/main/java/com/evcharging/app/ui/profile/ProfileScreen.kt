@@ -142,12 +142,22 @@ fun ProfileScreen(
                                 onValueChange = { name = it },
                                 label = { Text("Full Name", color = TextSecondary) },
                                 modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = NeonCyan,
                                     unfocusedBorderColor = GlassWhite,
                                     focusedTextColor = TextPrimary,
                                     unfocusedTextColor = TextPrimary,
                                     cursorColor = NeonCyan
+                                ),
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                    imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                                ),
+                                keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                                    onDone = { 
+                                         // Hide keyboard
+                                         defaultKeyboardAction(androidx.compose.ui.text.input.ImeAction.Done)
+                                    }
                                 )
                             )
                             
@@ -166,6 +176,7 @@ fun ProfileScreen(
                                     readOnly = true,
                                     label = { Text("Vehicle Model", color = TextSecondary) },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedModel) },
+                                    singleLine = true,
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = NeonCyan,
                                         unfocusedBorderColor = GlassWhite,
@@ -207,6 +218,7 @@ fun ProfileScreen(
                                     readOnly = true,
                                     label = { Text("Vehicle Color", color = TextSecondary) },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedColor) },
+                                    singleLine = true,
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = NeonCyan,
                                         unfocusedBorderColor = GlassWhite,

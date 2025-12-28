@@ -15,7 +15,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.collectAsState
 import com.evcharging.app.data.AuthRepository
+import com.evcharging.app.data.ThemeRepository
 import com.evcharging.app.ui.auth.LoginScreen
 import com.evcharging.app.ui.auth.SignUpScreen
 import com.evcharging.app.ui.components.BottomNavigationBar
@@ -32,15 +34,19 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
+    lateinit var themeRepository: ThemeRepository
+    
+    @Inject
     lateinit var authRepository: AuthRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var isDarkTheme by remember { mutableStateOf(true) }
+            // Observe Theme from Repository
+            val isDarkTheme by themeRepository.isDarkTheme.collectAsState(initial = true)
             
             EVChargingAppTheme(darkTheme = isDarkTheme) {
-                MainApp(authRepository, isDarkTheme) { isDarkTheme = !isDarkTheme }
+                MainApp(authRepository, isDarkTheme)
             }
         }
     }
@@ -49,8 +55,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainApp(
     authRepository: AuthRepository,
-    isDarkTheme: Boolean,
-    onThemeChange: () -> Unit
+    isDarkTheme: Boolean
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -61,7 +66,7 @@ fun MainApp(
 
     Scaffold(
         topBar = {
-            // Global TopBar removed as per specific requests for all main screens
+            // Global TopBar removed
         },
         bottomBar = {
             if (currentRoute in listOf("home", "navigation", "tripplanner", "wallet", "profile")) {
@@ -78,13 +83,13 @@ fun MainApp(
             composable("signup") { SignUpScreen(navController) }
             composable("home") { 
                 HomeScreen(
-                    navController = navController, 
-                    isDarkTheme = isDarkTheme,
-                    onThemeChange = onThemeChange
+                    navController = navController
                 ) 
             }
             composable("navigation") { NavigationScreen() }
             composable("tripplanner") { TripPlannerScreen(navController) }
+            composable("settings") { com.evcharging.app.ui.settings.SettingsScreen(navController) }
+            
             composable(
                 route = "booking_detail/{stationName}",
                 arguments = listOf(androidx.navigation.navArgument("stationName") { type = androidx.navigation.NavType.StringType })

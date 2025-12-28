@@ -15,16 +15,35 @@ class BookingRepository @Inject constructor(
     suspend fun createBooking(stationName: String, amount: String, paymentMethod: String, bookingDate: Long): Result<String> {
         return try {
             val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
+            val amountDouble = amount.toDoubleOrNull() ?: 0.0
+            
             val booking = hashMapOf(
                 "userId" to userId,
                 "stationName" to stationName,
-                "amount" to amount,
+                "amount" to amount, // Keep as String in Booking for consistency with existing data if needed, or update to Double? Let's keep String as it was used before, but good to check usage.
                 "paymentMethod" to paymentMethod,
                 "bookingDate" to bookingDate,
                 "timestamp" to System.currentTimeMillis(),
                 "status" to "Confirmed"
             )
             val docRef = firestore.collection("bookings").add(booking).await()
+            
+            // Create corresponding Transaction record for Wallet History
+            val transactionId = java.util.UUID.randomUUID().toString()
+            val transactionRecord = hashMapOf(
+                "id" to transactionId,
+                "bookingId" to docRef.id,
+                "userId" to userId,
+                "stationId" to stationName, 
+                "amount" to amountDouble, // Save as Double for Transaction model compatibility
+                "type" to "BOOKING",
+                "status" to "COMPLETED", 
+                "paymentMethod" to paymentMethod,
+                "timestamp" to com.google.firebase.Timestamp.now(),
+                "rrn" to "BKG-${System.currentTimeMillis()}"
+            )
+            firestore.collection("transactions").document(transactionId).set(transactionRecord).await()
+            
             Result.success(docRef.id)
         } catch (e: Exception) {
             Result.failure(e)
@@ -94,20 +113,29 @@ class BookingRepository @Inject constructor(
                     val amountStr = doc.getString("amount") ?: "0.0"
                     val amount = amountStr.toDoubleOrNull() ?: 0.0
                     val bookingId = doc.id
+                    val paymentMethod = doc.getString("paymentMethod") ?: "Wallet" // Default to Wallet
+                    val statusStr = doc.getString("status") ?: "Unknown"
                     
                     // Check if this booking already has a corresponding transaction
                     if (transactions.any { it.bookingId == bookingId }) {
-                        null // Skip, prefer the explicit transaction record
+                        null 
                     } else {
+                        val txStatus = when (statusStr) {
+                            "Cancelled", "Failed" -> com.evcharging.app.data.model.TransactionStatus.FAILED
+                            "Confirmed", "Charging", "Completed" -> com.evcharging.app.data.model.TransactionStatus.COMPLETED
+                            else -> com.evcharging.app.data.model.TransactionStatus.PENDING
+                        }
+
                         com.evcharging.app.data.model.Transaction(
                             id = bookingId,
                             bookingId = bookingId,
                             userId = userId,
-                            stationId = doc.getString("stationName") ?: "Unknown", // Temporarily use name as ID or placeholder
+                            stationId = doc.getString("stationName") ?: "Unknown",
                             amount = amount,
                             type = com.evcharging.app.data.model.TransactionType.BOOKING,
-                            status = if (doc.getString("status") == "Cancelled") com.evcharging.app.data.model.TransactionStatus.FAILED else com.evcharging.app.data.model.TransactionStatus.COMPLETED,
+                            status = txStatus,
                             rrn = "BKG-${timestamp}",
+                            paymentMethod = paymentMethod,
                             timestamp = com.google.firebase.Timestamp(java.util.Date(timestamp))
                         )
                     }
@@ -137,15 +165,19 @@ class BookingRepository @Inject constructor(
             firestore.collection("bookings").document(bookingId).update("status", "Cancelled").await()
 
             // 2. Refund Wallet if applicable
-            if (paymentMethod == "Wallet" && amount > 0) {
-                 firestore.runTransaction { transaction ->
-                    val userRef = firestore.collection("users").document(userId)
-                    val snapshot = transaction.get(userRef)
-                    val currentBalance = snapshot.getDouble("walletBalance") ?: 0.0
-                    transaction.update(userRef, "walletBalance", currentBalance + amount)
-                }.await()
+            // 2. Refund Processing
+            if (amount > 0) {
+                // Refund to Wallet Balance only if paid via Wallet
+                if (paymentMethod == "Wallet") {
+                     firestore.runTransaction { transaction ->
+                        val userRef = firestore.collection("users").document(userId)
+                        val snapshot = transaction.get(userRef)
+                        val currentBalance = snapshot.getDouble("walletBalance") ?: 0.0
+                        transaction.update(userRef, "walletBalance", currentBalance + amount)
+                    }.await()
+                }
 
-                // 3. Create Refund Transaction
+                // 3. Create Refund Transaction Record (For History)
                 val transactionId = java.util.UUID.randomUUID().toString()
                 val refundTransaction = hashMapOf(
                     "id" to transactionId,
@@ -154,7 +186,9 @@ class BookingRepository @Inject constructor(
                     "amount" to amount,
                     "type" to "REFUND",
                     "status" to "COMPLETED",
-                    "timestamp" to com.google.firebase.Timestamp.now()
+                    "paymentMethod" to paymentMethod, // Refunded to original source
+                    "timestamp" to com.google.firebase.Timestamp.now(),
+                    "rrn" to "REF-${System.currentTimeMillis()}"
                 )
                 firestore.collection("transactions").document(transactionId).set(refundTransaction).await()
             }

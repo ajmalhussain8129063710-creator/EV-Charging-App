@@ -49,16 +49,51 @@ class NavigationViewModel @Inject constructor(
         fetchDiningAreas()
     }
 
+    private val _filterType = MutableStateFlow<String?>(null) // "DC Fast", "AC Type 2", etc.
+    val filterType: StateFlow<String?> = _filterType
+
+    private val _filterStatus = MutableStateFlow<String?>(null) // "Available", "Operational"
+    val filterStatus: StateFlow<String?> = _filterStatus
+
+    fun setFilterType(type: String?) {
+        _filterType.value = type
+        applyFilters()
+    }
+
+    fun setFilterStatus(status: String?) {
+        _filterStatus.value = status
+        applyFilters()
+    }
+
+    private var allStations = listOf<Station>()
+
+    private fun applyFilters() {
+        var filtered = allStations
+        
+        _filterType.value?.let { type ->
+            filtered = filtered.filter { it.chargerType.contains(type, ignoreCase = true) }
+        }
+        
+        _filterStatus.value?.let { status ->
+             if (status == "Available") {
+                 filtered = filtered.filter { it.isAvailable }
+             } else if (status == "Operational") {
+                 filtered = filtered.filter { it.maintenanceStatus == "Operational" }
+             }
+        }
+        
+        _stations.value = filtered
+    }
+
     private fun fetchStations() {
         viewModelScope.launch(Dispatchers.IO) {
             // Fetch mock stations first
             val result = repository.getStations()
             val currentStations = result.getOrDefault(emptyList()).toMutableList()
-            _stations.value = currentStations
-
-            // Try to fetch real stations from Google (Singapore center)
+            
+            // Try to fetch real stations from Google (India center)
             try {
-                val realStations = placesRepository.searchPlaces("EV Charging Station", com.google.android.gms.maps.model.LatLng(1.3521, 103.8198))
+                val realStations = placesRepository.searchPlaces("EV Charging Station India", com.google.android.gms.maps.model.LatLng(21.1458, 79.0882))
                 
                 val deferredDetails = realStations.take(5).map { prediction ->
                     async {
@@ -78,10 +113,12 @@ class NavigationViewModel @Inject constructor(
 
                 val newStations = deferredDetails.awaitAll().filterNotNull()
                 currentStations.addAll(newStations)
-                _stations.value = currentStations
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+             
+            allStations = currentStations
+            applyFilters() // Initial apply
         }
     }
 
@@ -99,7 +136,7 @@ class NavigationViewModel @Inject constructor(
         _cameraUpdate.value = null
     }
 
-    private var startLocation: com.google.android.gms.maps.model.LatLng? = com.google.android.gms.maps.model.LatLng(1.3521, 103.8198) // Default to Singapore
+    private var startLocation: com.google.android.gms.maps.model.LatLng? = com.google.android.gms.maps.model.LatLng(21.1458, 79.0882) // Default to India
     private var destinationLocation: com.google.android.gms.maps.model.LatLng? = null
 
     fun onSearchResultSelected(placeId: String, isDestination: Boolean = false) {
@@ -157,7 +194,7 @@ class NavigationViewModel @Inject constructor(
 
     fun setCurrentLocation(latLng: com.google.android.gms.maps.model.LatLng) {
         // Only update if we don't have a manual start location set (or initial default)
-        if (startLocation == null || startLocation?.latitude == 1.3521) {
+        if (startLocation == null || startLocation?.latitude == 21.1458) {
             startLocation = latLng
             _cameraUpdate.value = latLng // Initial center
         }
@@ -202,6 +239,12 @@ class NavigationViewModel @Inject constructor(
         if (_route.value != null) {
             _isNavigationActive.value = true
             generateMockDirections()
+        }
+    }
+
+    fun recenterCamera() {
+        startLocation?.let {
+            _cameraUpdate.value = it
         }
     }
 
@@ -253,11 +296,11 @@ class NavigationViewModel @Inject constructor(
     private fun fetchDiningAreas() {
         // Mock dining areas near charging stations
         val areas = listOf(
-            Place("Food Republic", 1.3007, 103.8397, "Dining"),
-            Place("VivoCity Food Court", 1.2642, 103.8223, "Dining"),
-            Place("Rasapura Masters", 1.2834, 103.8607, "Dining"),
-            Place("Kopitiam", 1.3403, 103.7060, "Dining"),
-            Place("Changi Eats", 1.3554, 103.9864, "Dining")
+            Place("Haldiram's", 21.1458, 79.0882, "Dining"), // Nagpur
+            Place("Karim's", 28.6508, 77.2334, "Dining"), // Delhi
+            Place("Paradise Biryani", 17.4399, 78.4983, "Dining"), // Hyderabad
+            Place("Saravana Bhavan", 13.0827, 80.2707, "Dining"), // Chennai
+            Place("Leopold Cafe", 18.9233, 72.8315, "Dining") // Mumbai
         )
         _diningAreas.value = areas
     }

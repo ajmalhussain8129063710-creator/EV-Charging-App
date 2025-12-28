@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -52,6 +53,64 @@ class ServiceCenterViewModel @Inject constructor(
                  // Fallback if not logged in
                  _serviceCenters.value = serviceCenterRepository.getServiceCenters("Generic")
                  _nearbyCenters.value = serviceCenterRepository.getNearbyServiceCenters()
+            }
+        }
+    }
+
+    private val _services = MutableStateFlow<List<com.evcharging.app.model.ServiceItem>>(emptyList())
+    val services: StateFlow<List<com.evcharging.app.model.ServiceItem>> = _services.asStateFlow()
+
+    private val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+
+    fun fetchServices(stationId: String) {
+        viewModelScope.launch {
+            try {
+                val snapshot = firestore.collection("stations")
+                    .document(stationId)
+                    .collection("services")
+                    .get()
+                    .await()
+                val list = snapshot.toObjects(com.evcharging.app.model.ServiceItem::class.java)
+                _services.value = list
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun bookService(service: com.evcharging.app.model.ServiceItem, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val userId = auth.currentUser?.uid
+            if (userId == null) {
+                onResult(false)
+                return@launch
+            }
+            
+            // Fetch user name for the request
+            val userDoc = firestore.collection("users").document(userId).get().await()
+            val userName = userDoc.getString("name") ?: "Unknown User"
+
+            val request = com.evcharging.app.model.ServiceRequest(
+                id = java.util.UUID.randomUUID().toString(),
+                userId = userId,
+                userName = userName,
+                stationId = service.stationId,
+                serviceId = service.id,
+                serviceName = service.name,
+                price = service.price,
+                status = "Pending",
+                timestamp = com.google.firebase.Timestamp.now()
+            )
+
+            try {
+                firestore.collection("service_requests")
+                    .document(request.id)
+                    .set(request)
+                    .await()
+                onResult(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onResult(false)
             }
         }
     }

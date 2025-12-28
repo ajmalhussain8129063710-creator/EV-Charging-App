@@ -86,8 +86,14 @@ fun WalletScreen(
                     val isCredit = transaction.type.name == "REFUND" || transaction.type.name == "TOPUP"
                     val sign = if (isCredit) "+" else "-"
                     val amountColor = if (isCredit) com.evcharging.app.ui.theme.NeonGreen else com.evcharging.app.ui.theme.NeonRed
-                    val title = if (transaction.type.name == "BOOKING") "Debit Amount" else "Credit Amount"
-                    val subtitle = if (transaction.type.name == "BOOKING") "EV Charging" else if (transaction.type.name == "REFUND") "Refund" else "Top Up"
+                    val title = if (isCredit) "Credit Amount" else "Debit Amount"
+                    
+                    val subtitle = when(transaction.type.name) {
+                        "BOOKING" -> "Paid via ${transaction.paymentMethod}"
+                        "REFUND" -> "Refund Processed"
+                        "TOPUP" -> "Wallet Top Up"
+                        else -> "Transaction"
+                    }
 
                     Card(
                         modifier = Modifier
@@ -127,6 +133,7 @@ fun WalletScreen(
                         DetailRow("Type", selectedTransaction!!.type.name)
                         DetailRow("Status", selectedTransaction!!.status.name)
                         DetailRow("Amount", "$${selectedTransaction!!.amount}")
+                        DetailRow("Payment Method", selectedTransaction!!.paymentMethod)
 
                         if (selectedTransaction!!.stationId.isNotEmpty()) {
                             DetailRow("Station ID", selectedTransaction!!.stationId)

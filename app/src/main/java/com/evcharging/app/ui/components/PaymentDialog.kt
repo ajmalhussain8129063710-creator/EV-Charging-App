@@ -24,6 +24,7 @@ fun PaymentDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
+            colors = CardDefaults.cardColors(containerColor = com.evcharging.app.ui.theme.CardBackground),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(

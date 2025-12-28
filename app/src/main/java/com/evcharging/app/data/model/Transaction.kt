@@ -11,6 +11,7 @@ data class Transaction(
     val type: TransactionType = TransactionType.BOOKING, // BOOKING, REFUND, TOPUP
     val status: TransactionStatus = TransactionStatus.PENDING, // PENDING, COMPLETED, FAILED
     val rrn: String = "", // Reference Number
+    val paymentMethod: String = "Wallet", // UPI, Card, Wallet
     val timestamp: Timestamp = Timestamp.now()
 )
 

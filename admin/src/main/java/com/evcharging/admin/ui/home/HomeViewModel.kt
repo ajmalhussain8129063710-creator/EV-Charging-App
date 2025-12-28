@@ -10,6 +10,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -22,6 +24,9 @@ class HomeViewModel @Inject constructor(
 
     private val _station = MutableStateFlow<Station?>(null)
     val station: StateFlow<Station?> = _station.asStateFlow()
+
+    val stationType: StateFlow<String> = _station.map { it?.type ?: "Charging Station" }
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), "Charging Station")
 
     private val _adminUser = MutableStateFlow<AdminUser?>(null)
     val adminUser: StateFlow<AdminUser?> = _adminUser.asStateFlow()

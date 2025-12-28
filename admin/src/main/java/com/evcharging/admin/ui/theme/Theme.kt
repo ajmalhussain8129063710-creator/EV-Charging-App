@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -31,12 +32,12 @@ private val DarkColorScheme = darkColorScheme(
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryColor,
     secondary = SecondaryColor,
-    background = BackgroundColor, // Force dark background even in "Light" mode for consistent premium feel
-    surface = SurfaceColor,
-    onPrimary = OnPrimaryColor,
-    onSecondary = OnSecondaryColor,
-    onBackground = OnBackgroundColor,
-    onSurface = OnSurfaceColor,
+    background = Color(0xFFF5F7FA), // Light Grey
+    surface = Color.White,
+    onPrimary = Color.White,
+    onSecondary = Color.White,
+    onBackground = Color(0xFF1A1C1E),
+    onSurface = Color(0xFF1A1C1E),
 )
 
 @Composable

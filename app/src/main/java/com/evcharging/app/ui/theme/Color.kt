@@ -24,3 +24,17 @@ val GlassSurface = Color(0x0DFFFFFF)   // 5% White
 val TextPrimary = Color(0xFFFFFFFF)
 val TextSecondary = Color(0xB3FFFFFF)  // 70% White
 val TextTertiary = Color(0x80FFFFFF)   // 50% White
+
+// Friendly Light Palette (Advanced UI)
+val LightBackground = Color(0xFFEFF3F8) // Cool Grey/Blueish White
+val LightSurface = Color(0xFFFFFFFF)
+val LightCardBackground = Color(0xFFFFFFFF)
+val LightGlassSurface = Color(0x99FFFFFF) // high opacity white for glass on light
+val LightGlassBorder = Color(0x33FFFFFF)
+
+// Friendly Accents (Darker for visibility on light)
+val FriendlyPrimary = Color(0xFF00B0FF) // Light Blue (Vibrant)
+val FriendlySecondary = Color(0xFF651FFF) // Deep Purple
+val FriendlyTextPrimary = Color(0xFF1E293B) // Dark Slate
+val FriendlyTextSecondary = Color(0xFF64748B) // Slate Grey
+

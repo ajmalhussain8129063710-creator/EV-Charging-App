@@ -1,5 +1,6 @@
 package com.evcharging.app.ui.service
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,6 +21,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.evcharging.app.data.ServiceCenter
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServiceCenterScreen(
@@ -29,6 +34,109 @@ fun ServiceCenterScreen(
     val serviceCenters by viewModel.serviceCenters.collectAsState()
     val nearbyCenters by viewModel.nearbyCenters.collectAsState()
     val userCarBrand by viewModel.userCarBrand.collectAsState()
+    val services by viewModel.services.collectAsState()
+
+    var showServicesSheet by remember { mutableStateOf(false) }
+    var selectedCenter by remember { mutableStateOf<ServiceCenter?>(null) }
+    val sheetState = rememberModalBottomSheetState()
+    
+    // Booking Dialog
+    var showBookingDialog by remember { mutableStateOf(false) }
+    var selectedService by remember { mutableStateOf<com.evcharging.app.model.ServiceItem?>(null) }
+
+    if (showServicesSheet && selectedCenter != null) {
+        ModalBottomSheet(
+            onDismissRequest = { showServicesSheet = false },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+             Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "${selectedCenter?.name} Services",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                if (services.isEmpty()) {
+                    Text("No services available at the moment.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(32.dp))
+                } else {
+                    LazyColumn {
+                        items(services) { service ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                                    .clickable {
+                                        selectedService = service
+                                        showBookingDialog = true
+                                    },
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(service.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                        Text(service.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
+                                    }
+                                    Text("$${service.price}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+        }
+    }
+
+    if (showBookingDialog && selectedService != null) {
+        AlertDialog(
+            onDismissRequest = { showBookingDialog = false },
+            title = { Text("Confirm Booking") },
+            text = { 
+                Column {
+                    Text("Service: ${selectedService?.name}")
+                    Text("Price: $${selectedService?.price}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Proceed to payment?")
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.bookService(selectedService!!) { success ->
+                            if (success) {
+                                showBookingDialog = false
+                                showServicesSheet = false // Close sheet on success
+                                android.widget.Toast.makeText(navController.context, "Booking Confirmed!", android.widget.Toast.LENGTH_LONG).show()
+                            } else {
+                                android.widget.Toast.makeText(navController.context, "Booking Failed.", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                ) {
+                    Text("Pay & Book")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBookingDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -59,7 +167,7 @@ fun ServiceCenterScreen(
                 Text(
                     text = "Recommended for your vehicle",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -70,7 +178,11 @@ fun ServiceCenterScreen(
                 }
             } else {
                 items(serviceCenters) { center ->
-                    ServiceCenterCard(center)
+                    ServiceCenterCard(center) {
+                        selectedCenter = center
+                        viewModel.fetchServices(center.id)
+                        showServicesSheet = true
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
                 }
             }
@@ -86,7 +198,11 @@ fun ServiceCenterScreen(
             }
 
             items(nearbyCenters) { center ->
-                ServiceCenterCard(center)
+                ServiceCenterCard(center) {
+                    selectedCenter = center
+                    viewModel.fetchServices(center.id)
+                    showServicesSheet = true
+                }
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }
@@ -94,10 +210,12 @@ fun ServiceCenterScreen(
 }
 
 @Composable
-fun ServiceCenterCard(center: ServiceCenter) {
+fun ServiceCenterCard(center: ServiceCenter, onClick: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -107,9 +225,9 @@ fun ServiceCenterCard(center: ServiceCenter) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Gray)
+                Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(text = center.address, style = MaterialTheme.typography.bodyMedium)
+                Text(text = center.address, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(

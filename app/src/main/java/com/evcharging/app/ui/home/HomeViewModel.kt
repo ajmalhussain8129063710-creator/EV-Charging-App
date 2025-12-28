@@ -90,9 +90,9 @@ class HomeViewModel @Inject constructor(
 
     private fun fetchNearbyStations() {
         viewModelScope.launch {
-            // Mock user location for now (e.g., Orchard Road)
-            val userLat = 1.3000
-            val userLng = 103.8400
+            // Mock user location for now (e.g., Nagpur - India Center)
+            val userLat = 21.1458
+            val userLng = 79.0882
             
             val result = stationRepository.getStationsNear(userLat, userLng, 5.0)
             if (result.isSuccess) {
@@ -114,6 +114,25 @@ class HomeViewModel @Inject constructor(
     }
 
     val carModel: StateFlow<String?> = _userProfile.map { it["carModel"] as? String }.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), null)
-    val carColor: StateFlow<String?> = _userProfile.map { it["carColor"] as? String }.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), null)
-    val car3dModelUrl: StateFlow<String?> = _userProfile.map { it["car3dModelUrl"] as? String }.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), null)
+    
+    // 3D Car State
+    private val _selectedCarColor = MutableStateFlow<androidx.compose.ui.graphics.Color>(androidx.compose.ui.graphics.Color.Red)
+    val selectedCarColor: StateFlow<androidx.compose.ui.graphics.Color> = _selectedCarColor
+
+    // Using highly reliable CDN model (Astronaut) to ensure loading works
+    private val _car3dModelUrl = MutableStateFlow<String>("https://modelviewer.dev/shared-assets/models/Astronaut.glb") 
+    val car3dModelUrl: StateFlow<String> = _car3dModelUrl
+
+    fun updateCarColor(color: androidx.compose.ui.graphics.Color) {
+        _selectedCarColor.value = color
+    }
+
+    fun searchAndSelectCar(modelName: String) {
+        // Mock logic
+        if (modelName.contains("Tesla", ignoreCase = true)) {
+             _car3dModelUrl.value = "https://modelviewer.dev/shared-assets/models/RobotExpressive.glb" // Alternative model
+        } else {
+             _car3dModelUrl.value = "https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+        }
+    }
 }

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -30,37 +31,37 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.evcharging.app.ui.components.Car3DViewer
 import com.evcharging.app.ui.components.GlassCard
 import com.evcharging.app.ui.components.NeonButton
 import com.evcharging.app.ui.components.VoiceAssistantButton
-import com.evcharging.app.ui.theme.*
-
+import com.evcharging.app.ui.theme.GlassSurface
+import com.evcharging.app.ui.theme.GlassWhite
+import com.evcharging.app.ui.theme.NeonCyan
+import com.evcharging.app.ui.theme.NeonGreen
+import com.evcharging.app.ui.theme.NeonRed
+    
 @Composable
 fun HomeScreen(
     navController: NavController,
-    isDarkTheme: Boolean = true,
-    onThemeChange: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val carModel by viewModel.carModel.collectAsState()
-// ... existing code ...
-    
-    
+
     LaunchedEffect(Unit) {
         viewModel.refreshData()
     }
     
     // AI Theme Colors
-    val neonBlue = NeonCyan
-    val darkBackground = DeepBackground
-    val cardBackground = CardBackground // Use this for dialogs, Glass for UI
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val cardBackground = MaterialTheme.colorScheme.surfaceVariant
 
     var showMenu by remember { mutableStateOf(false) }
     var showHistoryDialog by remember { mutableStateOf(false) }
     var showPointsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = darkBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             VoiceAssistantButton { command ->
                 handleVoiceCommand(command, navController)
@@ -71,13 +72,7 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFF0F1525), DeepBackground),
-                        startY = 0f,
-                        endY = 1500f
-                    )
-                )
+                .background(MaterialTheme.colorScheme.background)
         ) {
             Column(
                 modifier = Modifier
@@ -96,12 +91,12 @@ fun HomeScreen(
                         Text(
                             text = "Good Morning,",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                         )
                         Text(
                             text = "Driver", // Could be user name
                             style = MaterialTheme.typography.headlineMedium,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -117,51 +112,31 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "Menu",
-                            tint = NeonCyan,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp)
                         )
                         
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
-                            modifier = Modifier.background(CardBackground)
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                         ) {
                             DropdownMenuItem(
-                                text = { 
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text("Dark Mode", color = Color.White, modifier = Modifier.weight(1f))
-                                        Switch(
-                                            checked = isDarkTheme,
-                                            onCheckedChange = { onThemeChange() },
-                                            colors = SwitchDefaults.colors(
-                                                checkedThumbColor = NeonCyan,
-                                                checkedTrackColor = DeepBackground,
-                                                uncheckedThumbColor = Color.Gray,
-                                                uncheckedTrackColor = Color.White
-                                            )
-                                        )
-                                    }
-                                },
-                                onClick = {
-                                    // Switch handles click
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Profile", color = Color.White) },
+                                text = { Text("Profile", color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showMenu = false
                                     navController.navigate("profile")
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Settings", color = Color.White) },
+                                text = { Text("Settings", color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showMenu = false
-                                    android.widget.Toast.makeText(navController.context, "Settings Clicked", android.widget.Toast.LENGTH_SHORT).show()
+                                    navController.navigate("settings")
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Help & Support", color = Color.White) },
+                                text = { Text("Help & Support", color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showMenu = false
                                     navController.navigate("support")
@@ -169,14 +144,14 @@ fun HomeScreen(
                             )
                             Divider(color = Color.Gray.copy(alpha = 0.5f))
                             DropdownMenuItem(
-                                text = { Text("Charging History", color = Color.White) },
+                                text = { Text("Charging History", color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showMenu = false
                                     showHistoryDialog = true
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Loyalty Points", color = Color.White) },
+                                text = { Text("Loyalty Points", color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showMenu = false
                                     showPointsDialog = true
@@ -188,57 +163,53 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // AI Core Visualization
+                // Vehicle Search & 3D Visualization
+                var searchQuery by remember { mutableStateOf("") }
+                val car3dUrl by viewModel.car3dModelUrl.collectAsState()
+                val selectedColor by viewModel.selectedCarColor.collectAsState()
+
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { 
+                        searchQuery = it
+                        // Auto-search or wait for submit? doing auto for demo
+                        if (it.length > 2) viewModel.searchAndSelectCar(it)
+                    },
+                    placeholder = { Text("Search EV Model (e.g. Tesla)", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = Color.Transparent
+                    )
+                )
+
                 Box(
                     modifier = Modifier
-                        .size(200.dp)
-                        .background(Color.Transparent),
+                        .size(300.dp) // Car View Area
+                        .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Outer Glow
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(neonBlue.copy(alpha = 0.2f), Color.Transparent),
-                                    radius = 250f
-                                )
-                            )
+                    Car3DViewer(
+                        modelUrl = car3dUrl,
+                        carColor = selectedColor,
+                        onColorChange = viewModel::updateCarColor,
+                        modifier = Modifier.fillMaxSize()
                     )
-                    
-                    // Lottie Animation (AI Orb)
-                    val composition by rememberLottieComposition(
-                        LottieCompositionSpec.Url("https://lottie.host/5a6a4f2c-5c3a-4b0a-9b0a-5c3a4b0a9b0a/placeholder.json")
-                    )
-                    
-                    if (composition == null) {
-                         Box(
-                            modifier = Modifier
-                                .size(100.dp)
-                                .border(2.dp, neonBlue, CircleShape)
-                                .background(neonBlue.copy(alpha = 0.1f), CircleShape)
-                        )
-                    } else {
-                        LottieAnimation(
-                            composition = composition,
-                            iterations = LottieConstants.IterateForever,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
                 }
                 
                 Text(
-                    text = "AI System Online",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = NeonCyan,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
-                Text(
-                    text = "Vehicle: ${carModel ?: "Unknown"}",
+                    text = "Touch car to customize & view details",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                 )
+                
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Active Bookings Section
                 val upcomingBookings by viewModel.upcomingBookings.collectAsState()
@@ -275,12 +246,12 @@ fun HomeScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column {
-                                        Text(booking["stationName"] as String, style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
-                                        Text(dateString, style = MaterialTheme.typography.bodySmall, color = NeonCyan)
+                                        Text(booking["stationName"] as String, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                                        Text(dateString, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                                     }
                                     Column(horizontalAlignment = Alignment.End) {
-                                        Text(status, color = if(status == "Charging") NeonGreen else NeonCyan, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                                        Text("$${booking["amount"]}", color = TextSecondary, style = MaterialTheme.typography.titleMedium)
+                                        Text(status, color = if(status == "Charging") NeonGreen else MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                        Text("$${booking["amount"]}", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), style = MaterialTheme.typography.titleMedium)
                                     }
                                 }
                                 
@@ -326,12 +297,12 @@ fun HomeScreen(
                     if (bookingToCancel != null) {
                         AlertDialog(
                             onDismissRequest = { bookingToCancel = null },
-                            title = { Text("Booking Management", color = TextPrimary) },
+                            title = { Text("Booking Management", color = MaterialTheme.colorScheme.onSurface) },
                             text = { 
                                 Column {
-                                    Text("Station: ${(upcomingBookings.find { it["id"] == bookingToCancel })?.get("stationName")}", color = TextSecondary)
+                                    Text("Station: ${(upcomingBookings.find { it["id"] == bookingToCancel })?.get("stationName")}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Would you like to cancel this booking? A refund will be initiated.", color = TextSecondary)
+                                    Text("Would you like to cancel this booking? A refund will be initiated.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             },
                             confirmButton = {
@@ -350,9 +321,9 @@ fun HomeScreen(
                                     Text("No", color = NeonCyan)
                                 }
                             },
-                            containerColor = DeepBackground,
-                            titleContentColor = TextPrimary,
-                            textContentColor = TextSecondary
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            titleContentColor = MaterialTheme.colorScheme.onSurface,
+                            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -375,7 +346,7 @@ fun HomeScreen(
                         title = "Range",
                         value = "320 km",
                         icon = Icons.Default.Speed,
-                        color = NeonCyan,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -386,7 +357,7 @@ fun HomeScreen(
                 Text(
                     text = "Quick Actions",
                     style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.align(Alignment.Start)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -416,18 +387,18 @@ fun HomeScreen(
         val history by viewModel.chargingHistory.collectAsState()
         AlertDialog(
             onDismissRequest = { showHistoryDialog = false },
-            title = { Text("Charging History", color = Color.White) },
+            title = { Text("Charging History", color = MaterialTheme.colorScheme.onSurface) },
             text = {
                 if (history.isEmpty()) {
-                    Text("No recent charging history.", color = TextSecondary)
+                    Text("No recent charging history.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 } else {
                     androidx.compose.foundation.lazy.LazyColumn {
                         items(history.size) { index ->
                             val transaction = history[index]
                             Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                                Text("Station ID: ${transaction.stationId}", color = Color.White, fontWeight = FontWeight.Bold)
-                                Text("Amount: $${transaction.amount}", color = neonBlue)
-                                Text("Date: ${transaction.timestamp.toDate()}", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                                Text("Station ID: ${transaction.stationId}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                                Text("Amount: $${transaction.amount}", color = MaterialTheme.colorScheme.primary)
+                                Text("Date: ${transaction.timestamp.toDate()}", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 Divider(color = Color.Gray.copy(alpha = 0.5f), modifier = Modifier.padding(top = 8.dp))
                             }
                         }
@@ -436,10 +407,10 @@ fun HomeScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showHistoryDialog = false }) {
-                    Text("Close", color = neonBlue)
+                    Text("Close", color = MaterialTheme.colorScheme.primary)
                 }
             },
-            containerColor = cardBackground
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
@@ -447,22 +418,22 @@ fun HomeScreen(
         val points by viewModel.userPoints.collectAsState()
         AlertDialog(
             onDismissRequest = { showPointsDialog = false },
-            title = { Text("Loyalty Points", color = Color.White) },
+            title = { Text("Loyalty Points", color = MaterialTheme.colorScheme.onSurface) },
             text = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(48.dp))
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("$points Points", style = MaterialTheme.typography.displayMedium, color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("$points Points", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Earn points with every charge!", color = TextSecondary)
+                    Text("Earn points with every charge!", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showPointsDialog = false }) {
-                    Text("Awesome!", color = neonBlue)
+                    Text("Awesome!", color = MaterialTheme.colorScheme.primary)
                 }
             },
-            containerColor = cardBackground
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 }
@@ -488,8 +459,8 @@ fun StatusCard(
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = value, style = MaterialTheme.typography.headlineSmall, color = TextPrimary, fontWeight = FontWeight.Bold)
-            Text(text = title, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+            Text(text = value, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+            Text(text = title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -505,7 +476,7 @@ fun ActionButton(
        text = text,
        onClick = onClick,
        modifier = modifier,
-       color = NeonCyan // Or passing color if needed
+       color = MaterialTheme.colorScheme.primary // Use theme primary
     )
 }
 

@@ -18,16 +18,24 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.evcharging.admin.ui.navigation.AdminScreen
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
+import com.evcharging.admin.ui.services.ServicesScreen
+import com.evcharging.admin.ui.analytics.ServiceAnalyticsScreen
+import androidx.compose.material.icons.filled.Build
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminHomeScreen(
-    rootNavController: NavController
+    rootNavController: NavController,
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val homeNavController = rememberNavController()
     var showMenu by remember { mutableStateOf(false) }
     val navBackStackEntry by homeNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    
+    val stationType by viewModel.stationType.collectAsState()
 
     Scaffold(
         topBar = {
@@ -111,53 +119,102 @@ fun AdminHomeScreen(
                         unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Restaurant, contentDescription = "Dining") },
-                    label = { Text("Dining") },
-                    selected = currentRoute == AdminScreen.Dining.route,
-                    onClick = {
-                        homeNavController.navigate(AdminScreen.Dining.route) {
-                            popUpTo(homeNavController.graph.startDestinationId) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                if (stationType != "Service Center") {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Restaurant, contentDescription = "Dining") },
+                        label = { Text("Dining") },
+                        selected = currentRoute == AdminScreen.Dining.route,
+                        onClick = {
+                            homeNavController.navigate(AdminScreen.Dining.route) {
+                                popUpTo(homeNavController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
                     )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.LocalOffer, contentDescription = "Promotions") },
-                    label = { Text("Promos") },
-                    selected = currentRoute == AdminScreen.Promotions.route,
-                    onClick = {
-                        homeNavController.navigate(AdminScreen.Promotions.route) {
-                            popUpTo(homeNavController.graph.startDestinationId) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.LocalOffer, contentDescription = "Promotions") },
+                        label = { Text("Promos") },
+                        selected = currentRoute == AdminScreen.Promotions.route,
+                        onClick = {
+                            homeNavController.navigate(AdminScreen.Promotions.route) {
+                                popUpTo(homeNavController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
                     )
-                )
+                } else {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Build, contentDescription = "Services") },
+                        label = { Text("Services") },
+                        selected = currentRoute == AdminScreen.Services.route,
+                        onClick = {
+                            homeNavController.navigate(AdminScreen.Services.route) {
+                                popUpTo(homeNavController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.LocalOffer, contentDescription = "Promotions") },
+                        label = { Text("Promos") },
+                        selected = currentRoute == AdminScreen.Promotions.route,
+                        onClick = {
+                            homeNavController.navigate(AdminScreen.Promotions.route) {
+                                popUpTo(homeNavController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    )
+                }
             }
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             NavHost(navController = homeNavController, startDestination = AdminScreen.Home.route) {
-                composable(AdminScreen.Home.route) { DashboardContent() }
+                composable(AdminScreen.Home.route) { 
+                    if (stationType == "Service Center") {
+                        ServiceCenterDashboard(navController = homeNavController)
+                    } else {
+                        DashboardContent() 
+                    }
+                }
                 composable(AdminScreen.Wallet.route) { com.evcharging.admin.ui.wallet.AdminWalletScreen(navController = homeNavController) }
                 composable(AdminScreen.Dining.route) { DiningScreen() }
-                composable(AdminScreen.Promotions.route) { PromotionsScreen() }
+                composable(AdminScreen.Promotions.route) { PromotionsScreen(stationType = stationType) }
+                composable(AdminScreen.Services.route) { ServicesScreen() }
+                composable(AdminScreen.ServiceAnalytics.route) { ServiceAnalyticsScreen(navController = homeNavController) }
             }
         }
     }
