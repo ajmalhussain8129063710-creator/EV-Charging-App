@@ -20,5 +20,5 @@ enum class TransactionType {
 }
 
 enum class TransactionStatus {
-    PENDING, COMPLETED, FAILED
+    PENDING, COMPLETED, FAILED, REFUNDED, IN_PROGRESS
 }

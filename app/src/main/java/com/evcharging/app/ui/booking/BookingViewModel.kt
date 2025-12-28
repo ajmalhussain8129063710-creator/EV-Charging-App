@@ -70,21 +70,7 @@ class BookingViewModel @Inject constructor(
                 return@launch
             }
 
-            // 1. Handle Wallet Payment
-            if (paymentMethod == "Wallet") {
-                if (_walletBalance.value < amount) {
-                    _bookingState.value = BookingState.Error("Insufficient wallet balance")
-                    return@launch
-                }
-                val deductResult = authRepository.deductWalletBalance(userId, amount)
-                if (deductResult.isFailure) {
-                    _bookingState.value = BookingState.Error("Wallet transaction failed")
-                    return@launch
-                }
-                _walletBalance.value -= amount // Optimistic update
-            }
-
-            // 2. Create Booking
+            // 1. Create Booking (Handles Wallet Deduction and Transaction Creation internally)
             val bookingResult = bookingRepository.createBooking(stationName, amount.toString(), paymentMethod, date)
             if (bookingResult.isFailure) {
                 _bookingState.value = BookingState.Error("Booking failed: ${bookingResult.exceptionOrNull()?.message}")
@@ -93,19 +79,10 @@ class BookingViewModel @Inject constructor(
             val bookingId = bookingResult.getOrNull() ?: ""
             currentBookingId = bookingId
 
-            // 3D. Create Transaction
-            val rrn = "TXN-${System.currentTimeMillis()}"
-            val transaction = com.evcharging.app.data.model.Transaction(
-                bookingId = bookingId,
-                userId = userId,
-                stationId = stationId,
-                amount = amount,
-                type = com.evcharging.app.data.model.TransactionType.BOOKING,
-                status = com.evcharging.app.data.model.TransactionStatus.COMPLETED, // Mark as COMPLETED since money is deducted
-                rrn = rrn,
-                timestamp = com.google.firebase.Timestamp.now()
-            )
-            bookingRepository.createTransaction(transaction)
+            // Optimistic Wallet Update if Wallet was used (Optional, or re-fetch)
+            if (paymentMethod == "Wallet") {
+                 _walletBalance.value -= amount
+            }
 
             _bookingState.value = BookingState.Success
         }

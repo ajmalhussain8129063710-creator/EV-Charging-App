@@ -17,10 +17,31 @@ class BookingRepository @Inject constructor(
             val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
             val amountDouble = amount.toDoubleOrNull() ?: 0.0
             
+            // 1. Deduct Balance if Wallet
+            if (paymentMethod == "Wallet") {
+                // We need to deduct balance. 
+                // Since BookingRepository doesn't have AuthRepository injected directly (it has Auth but AuthRepository is a wrapper),
+                // we should duplicate the simple deduction logic or inject AuthRepository. 
+                // For now, I'll implement the deduction logic directly here using Firestore transaction to ensure atomicity with booking creation if possible, 
+                // but since they are different collections, we can just run a transaction for deduction first or part of the same batch.
+                // Let's use a runTransaction for deduction first.
+                
+                firestore.runTransaction { transaction ->
+                    val userRef = firestore.collection("users").document(userId)
+                    val snapshot = transaction.get(userRef)
+                    val currentBalance = snapshot.getDouble("walletBalance") ?: 0.0
+                    if (currentBalance >= amountDouble) {
+                        transaction.update(userRef, "walletBalance", currentBalance - amountDouble)
+                    } else {
+                        throw Exception("Insufficient balance")
+                    }
+                }.await()
+            }
+
             val booking = hashMapOf(
                 "userId" to userId,
                 "stationName" to stationName,
-                "amount" to amount, // Keep as String in Booking for consistency with existing data if needed, or update to Double? Let's keep String as it was used before, but good to check usage.
+                "amount" to amount, 
                 "paymentMethod" to paymentMethod,
                 "bookingDate" to bookingDate,
                 "timestamp" to System.currentTimeMillis(),
@@ -35,9 +56,9 @@ class BookingRepository @Inject constructor(
                 "bookingId" to docRef.id,
                 "userId" to userId,
                 "stationId" to stationName, 
-                "amount" to amountDouble, // Save as Double for Transaction model compatibility
+                "amount" to amountDouble, 
                 "type" to "BOOKING",
-                "status" to "COMPLETED", 
+                "status" to "PENDING", // Initial state is Pending until Charging Starts
                 "paymentMethod" to paymentMethod,
                 "timestamp" to com.google.firebase.Timestamp.now(),
                 "rrn" to "BKG-${System.currentTimeMillis()}"
@@ -64,6 +85,18 @@ class BookingRepository @Inject constructor(
     suspend fun startCharging(bookingId: String): Result<Boolean> {
         return try {
             firestore.collection("bookings").document(bookingId).update("status", "Charging").await()
+            
+            // Move Transaction to IN_PROGRESS (Confirmed/Active for Admin)
+            val snapshot = firestore.collection("transactions")
+                .whereEqualTo("bookingId", bookingId)
+                .get()
+                .await()
+            
+            if (!snapshot.isEmpty) {
+                val docId = snapshot.documents[0].id
+                firestore.collection("transactions").document(docId).update("status", "IN_PROGRESS").await()
+            }
+
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
@@ -122,7 +155,9 @@ class BookingRepository @Inject constructor(
                     } else {
                         val txStatus = when (statusStr) {
                             "Cancelled", "Failed" -> com.evcharging.app.data.model.TransactionStatus.FAILED
-                            "Confirmed", "Charging", "Completed" -> com.evcharging.app.data.model.TransactionStatus.COMPLETED
+                            "Confirmed" -> com.evcharging.app.data.model.TransactionStatus.PENDING
+                            "Charging" -> com.evcharging.app.data.model.TransactionStatus.IN_PROGRESS
+                            "Completed" -> com.evcharging.app.data.model.TransactionStatus.COMPLETED
                             else -> com.evcharging.app.data.model.TransactionStatus.PENDING
                         }
 
@@ -185,7 +220,7 @@ class BookingRepository @Inject constructor(
                     "userId" to userId,
                     "amount" to amount,
                     "type" to "REFUND",
-                    "status" to "COMPLETED",
+                    "status" to "COMPLETED", // Refund transaction itself is complete
                     "paymentMethod" to paymentMethod, // Refunded to original source
                     "timestamp" to com.google.firebase.Timestamp.now(),
                     "rrn" to "REF-${System.currentTimeMillis()}"

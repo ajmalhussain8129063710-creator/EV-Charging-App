@@ -54,10 +54,10 @@ class AdminWalletViewModel @Inject constructor(
         var pending = 0.0
         var account = 0.0
         transactions.forEach {
-            if (it.status == TransactionStatus.PENDING) {
-                pending += it.amount
-            } else if (it.status == TransactionStatus.COMPLETED) {
-                account += it.amount
+            when (it.status) {
+                TransactionStatus.PENDING -> pending += it.amount
+                TransactionStatus.IN_PROGRESS, TransactionStatus.COMPLETED -> account += it.amount
+                else -> {} // Ignore Failed/Refunded
             }
         }
         _pendingAmount.value = pending

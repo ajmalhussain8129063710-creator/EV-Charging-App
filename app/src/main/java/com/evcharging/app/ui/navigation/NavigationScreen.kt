@@ -120,8 +120,7 @@ fun NavigationScreen(
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-                )
-            ) {
+
                 val isNavigationActive by viewModel.isNavigationActive.collectAsState()
                 
                 // --- Map Controls (Satellite & Traffic) ---
