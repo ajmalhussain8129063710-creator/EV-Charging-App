@@ -1,59 +1,91 @@
 package com.evcharging.app.ui.navigation
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CallMade
 import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.PedalBike
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.TurnLeft
-import androidx.compose.material.icons.filled.TurnRight
-import androidx.compose.material.icons.filled.Satellite
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Traffic
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.clickable
-import com.evcharging.app.ui.components.VoiceAssistantButton
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberCameraPositionState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.filled.PedalBike
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Satellite
+import androidx.compose.material.icons.filled.Traffic
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.evcharging.app.data.model.Station
+import com.evcharging.app.ui.components.GlassCard
+import com.evcharging.app.ui.components.NeonButton
+import com.evcharging.app.ui.components.VoiceAssistantButton
+import com.evcharging.app.ui.theme.DeepBackground
+import com.evcharging.app.ui.theme.GlassWhite
+import com.evcharging.app.ui.theme.NeonCyan
+import com.evcharging.app.ui.theme.NeonGreen
+import com.evcharging.app.ui.theme.NeonPurple
+import com.evcharging.app.ui.theme.NeonRed
+import com.evcharging.app.ui.theme.TextPrimary
+import com.evcharging.app.ui.theme.TextSecondary
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import com.evcharging.app.ui.components.GlassCard
-import com.evcharging.app.ui.components.NeonButton
-import com.evcharging.app.ui.theme.*
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
-import kotlinx.coroutines.launch
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberCameraPositionState
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -70,18 +102,24 @@ fun NavigationScreen(
     val route by viewModel.route.collectAsState()
     val diningAreas by viewModel.diningAreas.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
-    // var searchQuery removed as it's now local to the search column
-
-    val locationPermissionState = rememberPermissionState(
-        android.Manifest.permission.ACCESS_FINE_LOCATION
-    )
-
+    val locationPermissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
     val cameraUpdate by viewModel.cameraUpdate.collectAsState()
+    val isNavigationActive by viewModel.isNavigationActive.collectAsState()
+    val directionSteps by viewModel.directionSteps.collectAsState()
+    val selectedMode by viewModel.selectedMode.collectAsState()
+    val filterType by viewModel.filterType.collectAsState()
+    val filterStatus by viewModel.filterStatus.collectAsState()
+
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet by remember { mutableStateOf(false) }
+    var selectedStation by remember { mutableStateOf<Station?>(null) }
+    var mapType by remember { mutableStateOf(MapType.NORMAL) }
+    var isTrafficEnabled by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         locationPermissionState.launchPermissionRequest()
     }
-    
+
     // Fetch user location if permission granted
     LaunchedEffect(locationPermissionState.status.isGranted) {
         if (locationPermissionState.status.isGranted) {
@@ -101,231 +139,175 @@ fun NavigationScreen(
     LaunchedEffect(cameraUpdate) {
         cameraUpdate?.let { latLng ->
             cameraPositionState.animate(
-                update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(latLng, 12f),
+                update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
                 durationMs = 1000
             )
             viewModel.onCameraMoved()
         }
     }
 
-    val sheetState = rememberModalBottomSheetState()
-    var showBottomSheet by remember { mutableStateOf(false) }
-    var selectedStation by remember { mutableStateOf<com.evcharging.app.data.model.Station?>(null) }
-
     Scaffold(
         floatingActionButton = {
             VoiceAssistantButton { command ->
-                // Handle voice command
+                viewModel.search(command)
             }
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-
-                val isNavigationActive by viewModel.isNavigationActive.collectAsState()
-                
-                // --- Map Controls (Satellite & Traffic) ---
-                var mapType by remember { mutableStateOf(com.google.maps.android.compose.MapType.NORMAL) }
-                var isTrafficEnabled by remember { mutableStateOf(false) }
-
-                GoogleMap(
-                    modifier = Modifier.fillMaxSize(),
-                    cameraPositionState = cameraPositionState,
-                    properties = MapProperties(
-                        isMyLocationEnabled = locationPermissionState.status.isGranted,
-                        isTrafficEnabled = isTrafficEnabled,
-                        mapType = mapType
-                    ),
-                    uiSettings = MapUiSettings(
-                        myLocationButtonEnabled = false, // We'll add a custom one if needed, or rely on standard
-                        mapToolbarEnabled = false,
-                        zoomControlsEnabled = false, // Custom or gestures
-                        compassEnabled = true
-                    )
-                ) {
-                    // ... Content ...
-                }
-
-                // --- Map Control Buttons (Overlay) ---
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 100.dp, end = 16.dp) // Below Search Bar
-                ) {
-                    // Map Type Toggle
-                    GlassCard(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clickable { 
-                                mapType = if (mapType == com.google.maps.android.compose.MapType.NORMAL) 
-                                    com.google.maps.android.compose.MapType.SATELLITE 
-                                else 
-                                    com.google.maps.android.compose.MapType.NORMAL
-                            },
-                        shape = CircleShape,
-                        containerColor = DeepBackground.copy(alpha = 0.8f) 
-                    ) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                             Icon(
-                                 imageVector = if (mapType == com.google.maps.android.compose.MapType.NORMAL) 
-                                     androidx.compose.material.icons.Icons.Default.Satellite 
-                                 else 
-                                     androidx.compose.material.icons.Icons.Default.Map,
-                                 contentDescription = "Map Type",
-                                 tint = NeonCyan
-                             )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Traffic Toggle
-                    GlassCard(
-                         modifier = Modifier
-                            .size(50.dp)
-                            .clickable { isTrafficEnabled = !isTrafficEnabled },
-                        shape = CircleShape,
-                        containerColor = if (isTrafficEnabled) NeonCyan.copy(alpha = 0.3f) else DeepBackground.copy(alpha = 0.8f)
-                    ) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                             Icon(
-                                 imageVector = androidx.compose.material.icons.Icons.Default.Traffic,
-                                 contentDescription = "Traffic",
-                                 tint = if (isTrafficEnabled) NeonCyan else TextSecondary
-                             )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // My Location Button
-                    GlassCard(
-                         modifier = Modifier
-                            .size(50.dp)
-                            .clickable { 
-                                viewModel.recenterCamera() 
-                            },
-                        shape = CircleShape,
-                        containerColor = DeepBackground.copy(alpha = 0.8f)
-                    ) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                             Icon(
-                                 imageVector = androidx.compose.material.icons.Icons.Default.MyLocation,
-                                 contentDescription = "My Location",
-                                 tint = NeonGreen
-                             )
-                        }
-                    }
-                }
-                val isNavigationActive by viewModel.isNavigationActive.collectAsState()
-                
+            
+            // --- MAP LAYER ---
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(
+                    isMyLocationEnabled = locationPermissionState.status.isGranted,
+                    isTrafficEnabled = isTrafficEnabled,
+                    mapType = mapType
+                ),
+                uiSettings = MapUiSettings(
+                    myLocationButtonEnabled = false,
+                    mapToolbarEnabled = false,
+                    zoomControlsEnabled = false,
+                    compassEnabled = true
+                )
+            ) {
                 // Only show stations and dining areas when NOT navigating
                 if (!isNavigationActive) {
-                    // Dining Areas (Non-clustered for now as they are few)
+                    // Dining Areas
                     diningAreas.forEach { place ->
                         Marker(
-                             state = MarkerState(position = LatLng(place.latitude, place.longitude)),
-                             title = place.name,
-                             snippet = "Dining Area",
-                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
+                            state = MarkerState(position = LatLng(place.latitude, place.longitude)),
+                            title = place.name,
+                            snippet = "Dining Area",
+                            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
                         )
                     }
 
-                    // Stations with Clustering
-                    val stationItems = stations.map { station ->
-                        object : com.google.maps.android.clustering.ClusterItem {
-                            override fun getPosition(): LatLng = LatLng(station.latitude, station.longitude)
-                            override fun getTitle(): String = station.name
-                            override fun getSnippet(): String = if(station.isAvailable) "Available" else "Occupied"
-                            override fun getZIndex(): Float? = null // Optional
-                        }
-                    }
+                    // Stations
+                    stations.forEach { station ->
+                        val markerColor = if (station.maintenanceStatus == "Maintenance") BitmapDescriptorFactory.HUE_RED else BitmapDescriptorFactory.HUE_CYAN
+                        val snippetText = if (station.maintenanceStatus == "Maintenance") "Under Maintenance" else if (station.isAvailable) "Available" else "Occupied"
 
-                    // Note: Since Clustering is composable-heavy, for simplicity in this specific setup 
-                    // and to avoid 'clustering' build issues without 'maps-compose-utils' properly synced,
-                    // we will stick to standard markers but optimize rendering if list is small.
-                    // However, as per request, if 'maps-compose-utils' is available:
-                    
-                     /* 
-                     Clustering(
-                         items = stationItems,
-                         onClusterClick = { true },
-                         onClusterItemClick = { item ->
-                             // Find station by name/pos
-                             val station = stations.find { it.name == item.title }
-                             if (station != null) {
-                                  selectedStation = station
-                                  showBottomSheet = true
-                             }
-                             true
-                         }
-                     )
-                     */
-                     
-                     // Fallback to optimized Markers for now to ensure no build breakage if sync failed
-                     stations.forEach { station ->
-                         val markerColor = if (station.maintenanceStatus == "Maintenance") BitmapDescriptorFactory.HUE_RED else BitmapDescriptorFactory.HUE_CYAN
-                         val snippetText = if (station.maintenanceStatus == "Maintenance") "Under Maintenance" else if (station.isAvailable) "Available" else "Occupied"
-                         
-                         Marker(
-                             state = MarkerState(position = LatLng(station.latitude, station.longitude)),
-                             title = station.name,
-                             snippet = snippetText,
-                             icon = BitmapDescriptorFactory.defaultMarker(markerColor),
-                             onClick = {
-                                 selectedStation = station
-                                 showBottomSheet = true
-                                 false
-                             }
-                         )
-                     }
+                        Marker(
+                            state = MarkerState(position = LatLng(station.latitude, station.longitude)),
+                            title = station.name,
+                            snippet = snippetText,
+                            icon = BitmapDescriptorFactory.defaultMarker(markerColor),
+                            onClick = {
+                                selectedStation = station
+                                showBottomSheet = true
+                                false
+                            }
+                        )
+                    }
                 }
 
                 // Route Visualization
-                val route by viewModel.route.collectAsState()
-                if (route != null) {
-                    if (route!!.points.isNotEmpty()) {
-                        com.google.maps.android.compose.Polyline(
-                            points = route!!.points,
-                            color = NeonCyan,
-                            width = 12f,
-                            geodesic = true
-                        )
-                        
-                        val startPoint = route!!.points.first()
-                        Marker(
-                            state = MarkerState(position = startPoint),
-                            title = "Start",
-                            snippet = "Your Location",
-                            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
-                        )
+                if (route != null && route!!.points.isNotEmpty()) {
+                    Polyline(
+                        points = route!!.points,
+                        color = NeonCyan,
+                        width = 12f,
+                        geodesic = true
+                    )
 
-                        val destination = route!!.points.last()
-                        Marker(
-                            state = MarkerState(position = destination),
-                            title = "Destination",
-                            snippet = "${route!!.distance} • ${route!!.duration}",
-                            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                    val startPoint = route!!.points.first()
+                    Marker(
+                        state = MarkerState(position = startPoint),
+                        title = "Start",
+                        snippet = "Your Location",
+                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                    )
+
+                    val destination = route!!.points.last()
+                    Marker(
+                        state = MarkerState(position = destination),
+                        title = "Destination",
+                        snippet = "${route!!.distance} • ${route!!.duration}",
+                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                    )
+                }
+            }
+
+            // --- UI OVERLAYS ---
+
+            // 1. Map Control Buttons (Side Bar)
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 100.dp, end = 16.dp)
+            ) {
+                // Map Type Toggle
+                GlassCard(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clickable {
+                            mapType = if (mapType == MapType.NORMAL) MapType.SATELLITE else MapType.NORMAL
+                        },
+                    shape = CircleShape,
+                    containerColor = DeepBackground.copy(alpha = 0.8f)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (mapType == MapType.NORMAL) Icons.Filled.Satellite else Icons.Filled.Map,
+                            contentDescription = "Map Type",
+                            tint = NeonCyan
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Traffic Toggle
+                GlassCard(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clickable { isTrafficEnabled = !isTrafficEnabled },
+                    shape = CircleShape,
+                    containerColor = if (isTrafficEnabled) NeonCyan.copy(alpha = 0.3f) else DeepBackground.copy(alpha = 0.8f)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Filled.Traffic,
+                            contentDescription = "Traffic",
+                            tint = if (isTrafficEnabled) NeonCyan else TextSecondary
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // My Location Button
+                GlassCard(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clickable { viewModel.recenterCamera() },
+                    shape = CircleShape,
+                    containerColor = DeepBackground.copy(alpha = 0.8f)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Filled.MyLocation,
+                            contentDescription = "My Location",
+                            tint = NeonGreen
                         )
                     }
                 }
             }
 
-            val isNavigationActive by viewModel.isNavigationActive.collectAsState()
-            val directionSteps by viewModel.directionSteps.collectAsState()
-
-            // Search Bar Overlay (Hide when navigating)
+            // 2. Search Bar / Navigation Info
             if (!isNavigationActive) {
+                // Search Bar Overlay
                 Column(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .padding(16.dp)
                         .fillMaxWidth()
                 ) {
-                    // ... existing Search Bar Content ...
                     Surface(
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(16.dp),
                         color = DeepBackground.copy(alpha = 0.95f),
-                        border = androidx.compose.foundation.BorderStroke(1.5.dp, NeonCyan),
+                        border = BorderStroke(1.5.dp, NeonCyan),
                         shadowElevation = 8.dp
                     ) {
                         Column(modifier = Modifier.padding(8.dp)) {
@@ -334,20 +316,20 @@ fun NavigationScreen(
                             var destination by remember { mutableStateOf("") }
                             var activeField by remember { mutableStateOf<String?>(null) } // "start" or "dest"
 
-                            androidx.compose.material3.TextField(
+                            TextField(
                                 value = startLocation,
-                                onValueChange = { 
+                                onValueChange = {
                                     startLocation = it
                                     activeField = "start"
                                     viewModel.search(it)
                                 },
                                 placeholder = { Text("Start Location (Current)", color = TextSecondary) },
-                                leadingIcon = { 
+                                leadingIcon = {
                                     Icon(
-                                        imageVector = androidx.compose.material.icons.Icons.Default.Place, 
-                                        contentDescription = "Start", 
+                                        imageVector = Icons.Filled.Place,
+                                        contentDescription = "Start",
                                         tint = NeonCyan
-                                    ) 
+                                    )
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = TextFieldDefaults.colors(
@@ -361,24 +343,24 @@ fun NavigationScreen(
                                 ),
                                 singleLine = true
                             )
-                            
+
                             Divider(color = GlassWhite, thickness = 0.5.dp)
 
                             // Destination Input
-                            androidx.compose.material3.TextField(
+                            TextField(
                                 value = destination,
-                                onValueChange = { 
+                                onValueChange = {
                                     destination = it
                                     activeField = "dest"
                                     viewModel.search(it)
                                 },
                                 placeholder = { Text("Destination Point", color = TextSecondary) },
-                                leadingIcon = { 
+                                leadingIcon = {
                                     Icon(
-                                        imageVector = androidx.compose.material.icons.Icons.Default.LocationOn, 
-                                        contentDescription = "Destination", 
+                                        imageVector = Icons.Filled.LocationOn,
+                                        contentDescription = "Destination",
                                         tint = NeonRed
-                                    ) 
+                                    )
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = TextFieldDefaults.colors(
@@ -393,17 +375,47 @@ fun NavigationScreen(
                                 singleLine = true
                             )
 
-                             if (searchResults.isNotEmpty() && activeField != null) {
-                                // ... Search Results (Existing) ...
+                            if (searchResults.isNotEmpty() && activeField != null) {
+                                // List of predictions
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = 200.dp)
+                                        .padding(top = 8.dp)
+                                ) {
+                                    items(searchResults.size) { index ->
+                                        val result = searchResults[index]
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    if (activeField == "start") {
+                                                        startLocation = result.primaryText
+                                                        viewModel.onSearchResultSelected(result.placeId, isDestination = false)
+                                                    } else {
+                                                        destination = result.primaryText
+                                                        viewModel.onSearchResultSelected(result.placeId, isDestination = true)
+                                                    }
+                                                    activeField = null
+                                                }
+                                                .padding(vertical = 8.dp, horizontal = 4.dp)
+                                        ) {
+                                            Icon(Icons.Filled.Place, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Column {
+                                                Text(result.primaryText, color = TextPrimary, style = MaterialTheme.typography.bodyMedium)
+                                                Text(result.secondaryText, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                                            }
+                                        }
+                                        Divider(color = GlassWhite.copy(alpha = 0.1f))
+                                    }
+                                }
                             }
-                            
+
                             Spacer(modifier = Modifier.height(8.dp))
-                            
+
                             // Filter Chips Row
-                            val filterType by viewModel.filterType.collectAsState()
-                            val filterStatus by viewModel.filterStatus.collectAsState()
-                            
-                            androidx.compose.foundation.lazy.LazyRow(
+                            LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 item {
@@ -425,9 +437,9 @@ fun NavigationScreen(
                                 item {
                                     FilterChip(
                                         text = "Under Maintenance",
-                                        isSelected = filterStatus == "Operational", // Example logic: Operational filter means NO maintenance
-                                        onClick = { viewModel.setFilterStatus(if (filterStatus == "Operational") null else "Operational") }, 
-                                        color = NeonPurple // Re-using generic logic, name might be confusing but sticking to plan
+                                        isSelected = filterStatus == "Operational",
+                                        onClick = { viewModel.setFilterStatus(if (filterStatus == "Operational") null else "Operational") },
+                                        color = NeonPurple
                                     )
                                 }
                             }
@@ -444,9 +456,10 @@ fun NavigationScreen(
                             .fillMaxWidth()
                     ) {
                         GlassCard {
-                            val selectedMode by viewModel.selectedMode.collectAsState()
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
@@ -466,13 +479,9 @@ fun NavigationScreen(
                     }
                 }
             }
-            
-            
-            // Route Info Card (Show existing card or Navigation Mode card)
-            // Route Info Card (Show existing card or Navigation Mode card)
+
+            // 3. Route Info Card (Bottom)
             if (route != null) {
-                val selectedMode by viewModel.selectedMode.collectAsState()
-                
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -489,14 +498,14 @@ fun NavigationScreen(
                                 ) {
                                     ModeTab(
                                         text = "Car",
-                                        icon = androidx.compose.material.icons.Icons.Default.DirectionsCar,
+                                        icon = Icons.Filled.DirectionsCar,
                                         isSelected = selectedMode == TransportMode.CAR,
                                         onClick = { viewModel.setTransportMode(TransportMode.CAR) },
                                         color = NeonCyan
                                     )
                                     ModeTab(
                                         text = "Bike",
-                                        icon = androidx.compose.material.icons.Icons.Default.PedalBike,
+                                        icon = Icons.Filled.PedalBike,
                                         isSelected = selectedMode == TransportMode.BIKE,
                                         onClick = { viewModel.setTransportMode(TransportMode.BIKE) },
                                         color = NeonPurple
@@ -513,25 +522,25 @@ fun NavigationScreen(
                             ) {
                                 Column {
                                     if (isNavigationActive) {
-                                         Text("On Route (${if (selectedMode == TransportMode.CAR) "Car" else "Bike"})", style = MaterialTheme.typography.labelLarge, color = NeonGreen)
+                                        Text("On Route (${if (selectedMode == TransportMode.CAR) "Car" else "Bike"})", style = MaterialTheme.typography.labelLarge, color = NeonGreen)
                                     } else {
-                                         Text("Estimated Trip", style = MaterialTheme.typography.headlineSmall, color = NeonCyan)
+                                        Text("Estimated Trip", style = MaterialTheme.typography.headlineSmall, color = NeonCyan)
                                     }
-                                    
+
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Row {
-                                        Icon(androidx.compose.material.icons.Icons.Default.Place, "Dist", tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Filled.Place, "Dist", tint = TextSecondary, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(route!!.distance, color = TextPrimary, fontWeight = FontWeight.Bold)
                                         Spacer(modifier = Modifier.width(16.dp))
-                                        Icon(androidx.compose.material.icons.Icons.Default.LocationOn, "Time", tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Filled.LocationOn, "Time", tint = TextSecondary, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(route!!.duration, color = TextPrimary, fontWeight = FontWeight.Bold)
                                     }
                                 }
-                                
+
                                 if (isNavigationActive) {
-                                     NeonButton(
+                                    NeonButton(
                                         text = "End",
                                         onClick = { viewModel.endNavigation() },
                                         modifier = Modifier.height(48.dp),
@@ -551,20 +560,20 @@ fun NavigationScreen(
                 }
             }
 
-
-            
+            // 4. Missing Permission Warning
             if (!locationPermissionState.status.isGranted) {
                 Text(
                     text = "Please enable location permission to see your current location",
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 80.dp)
-                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.8f), androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
                         .padding(16.dp),
                     color = Color.White
                 )
             }
-            
+
+            // 5. Station Detail Sheet
             if (showBottomSheet && selectedStation != null) {
                 ModalBottomSheet(
                     onDismissRequest = { showBottomSheet = false },
@@ -580,19 +589,19 @@ fun NavigationScreen(
 }
 
 @Composable
-fun StationDetailContent(station: com.evcharging.app.data.model.Station) {
+fun StationDetailContent(station: Station) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .verticalScroll(androidx.compose.foundation.rememberScrollState())
+            .verticalScroll(rememberScrollState())
     ) {
         // Header
         Text(text = station.name, style = MaterialTheme.typography.headlineSmall, color = NeonCyan)
         Text(text = station.address, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Status
         Row(verticalAlignment = Alignment.CenterVertically) {
             val statusColor = if (station.maintenanceStatus == "Maintenance") NeonRed else NeonGreen
@@ -629,14 +638,15 @@ fun StationDetailContent(station: com.evcharging.app.data.model.Station) {
         Text(text = "Loyalty Rewards", style = MaterialTheme.typography.titleMedium, color = NeonGreen)
         Text(text = "Earn ${station.pointsPerKw} points per kW", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         if (station.rewards.isNotEmpty()) {
             station.rewards.forEach { reward ->
                 GlassCard(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -665,7 +675,8 @@ fun StationDetailContent(station: com.evcharging.app.data.model.Station) {
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -678,7 +689,7 @@ fun StationDetailContent(station: com.evcharging.app.data.model.Station) {
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
@@ -686,7 +697,7 @@ fun StationDetailContent(station: com.evcharging.app.data.model.Station) {
 @Composable
 fun ModeTab(
     text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
     color: Color
@@ -696,7 +707,7 @@ fun ModeTab(
 
     Box(
         modifier = Modifier
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(tabColor)
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp, horizontal = 16.dp)
@@ -706,7 +717,7 @@ fun ModeTab(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = text, tint = contentColor, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(6.dp))
-            Text(text, style = MaterialTheme.typography.labelLarge, color = contentColor, fontWeight = if(isSelected) FontWeight.Bold else FontWeight.Normal)
+            Text(text, style = MaterialTheme.typography.labelLarge, color = contentColor, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
         }
     }
 }
@@ -720,15 +731,15 @@ fun FilterChip(
 ) {
     val backgroundColor = if (isSelected) color.copy(alpha = 0.2f) else Color.Transparent
     val borderColor = if (isSelected) color else GlassWhite.copy(alpha = 0.5f)
-    
+
     Box(
         modifier = Modifier
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(backgroundColor)
-            .androidx.compose.foundation.border(1.dp, borderColor, androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
-        Text(text, style = MaterialTheme.typography.labelMedium, color = if(isSelected) color else TextPrimary)
+        Text(text, style = MaterialTheme.typography.labelMedium, color = if (isSelected) color else TextPrimary)
     }
 }

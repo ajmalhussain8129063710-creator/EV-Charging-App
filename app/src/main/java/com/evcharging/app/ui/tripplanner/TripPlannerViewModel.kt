@@ -92,12 +92,13 @@ class TripPlannerViewModel @Inject constructor(
 
                             val chargingStops = sortedStations.take(3).map { station ->
                                 val distFromStart = repository.calculateDistance(startLat, startLon, station.latitude, station.longitude)
-                                ChargingStation(
-                                    name = station.name,
-                                    distance = "%.1f km".format(distFromStart),
-                                    isAvailable = station.isAvailable,
-                                    isBooked = false // Reset for new trip
-                                )
+                                    ChargingStation(
+                                        id = station.id,
+                                        name = station.name,
+                                        distance = "%.1f km".format(distFromStart),
+                                        isAvailable = station.isAvailable,
+                                        isBooked = false // Reset for new trip
+                                    )
                             }
                             
                             // Estimate Battery Usage (approx 18kWh/100km, assuming 75kWh battery -> ~24% per 100km)
@@ -134,6 +135,7 @@ class TripPlannerViewModel @Inject constructor(
                      val chargingStops = sortedStations.take(3).map { station ->
                          val distFromStart = repository.calculateDistance(startLat, startLon, station.latitude, station.longitude)
                          ChargingStation(
+                             id = station.id,
                              name = station.name,
                              distance = "%.1f km".format(distFromStart),
                              isAvailable = station.isAvailable,

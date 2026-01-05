@@ -91,11 +91,23 @@ fun MainApp(
             composable("settings") { com.evcharging.app.ui.settings.SettingsScreen(navController) }
             
             composable(
-                route = "booking_detail/{stationName}",
-                arguments = listOf(androidx.navigation.navArgument("stationName") { type = androidx.navigation.NavType.StringType })
+                route = "booking_detail?stationName={stationName}&stationId={stationId}",
+                arguments = listOf(
+                    androidx.navigation.navArgument("stationName") { 
+                        type = androidx.navigation.NavType.StringType 
+                        defaultValue = "Unknown Station"
+                        nullable = true
+                    },
+                    androidx.navigation.navArgument("stationId") { 
+                        type = androidx.navigation.NavType.StringType 
+                        defaultValue = ""
+                        nullable = true
+                    }
+                )
             ) { backStackEntry ->
                 val stationName = backStackEntry.arguments?.getString("stationName") ?: "Unknown Station"
-                com.evcharging.app.ui.booking.BookingDetailScreen(navController, stationName)
+                val stationId = backStackEntry.arguments?.getString("stationId") ?: ""
+                com.evcharging.app.ui.booking.BookingDetailScreen(navController, stationName, stationId = stationId)
             }
             composable("service_center") { com.evcharging.app.ui.service.ServiceCenterScreen(navController) }
             composable("support") { com.evcharging.app.ui.support.UserSupportScreen(navController) }

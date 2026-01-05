@@ -19,6 +19,8 @@ import com.evcharging.app.ui.components.VoiceAssistantButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.clickable
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun TripPlannerScreen(
@@ -316,7 +318,10 @@ fun TripPlannerScreen(
                                         Button(
                                             onClick = {
                                                 // Navigate to Booking Detail Screen
-                                                navController.navigate("booking_detail/${station.name}")
+                                                // Navigate to Booking Detail Screen safely with Query Params
+                                                val encodedName = URLEncoder.encode(station.name, StandardCharsets.UTF_8.toString())
+                                                val encodedId = URLEncoder.encode(station.id, StandardCharsets.UTF_8.toString())
+                                                navController.navigate("booking_detail?stationName=$encodedName&stationId=$encodedId")
                                             },
                                             modifier = Modifier.height(36.dp),
                                             contentPadding = PaddingValues(horizontal = 8.dp)
@@ -350,6 +355,7 @@ data class TripResult(
 )
 
 data class ChargingStation(
+    val id: String, // Added ID for navigation/booking
     val name: String,
     val distance: String,
     val isAvailable: Boolean,

@@ -118,8 +118,7 @@ class BookingViewModel @Inject constructor(
         if (currentBookingId.isBlank()) return
         viewModelScope.launch {
             _bookingState.value = BookingState.Loading
-            val result = bookingRepository.
-            cancelBooking(currentBookingId)
+            val result = bookingRepository.cancelBooking(currentBookingId)
             if (result.isSuccess) {
                 _bookingState.value = BookingState.Cancelled
             } else {

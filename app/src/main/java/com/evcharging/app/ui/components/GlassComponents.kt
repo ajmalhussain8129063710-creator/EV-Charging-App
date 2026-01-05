@@ -26,12 +26,13 @@ import com.evcharging.app.ui.theme.*
 fun GlassCard(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(24.dp),
+    containerColor: Color? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     // Determine colors based on theme (using background luminance or simply surfaceVariant if properly mapped)
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     
-    val containerColor = if (isLight) {
+    val finalContainerColor = containerColor ?: if (isLight) {
         Color.White.copy(alpha = 0.7f) // Frosted White for Light Mode
     } else {
         GlassSurface // 10% White for Dark Mode
@@ -45,7 +46,7 @@ fun GlassCard(
 
     Surface(
         modifier = modifier,
-        color = containerColor,
+        color = finalContainerColor,
         shape = shape,
         border = BorderStroke(1.dp, Brush.linearGradient(listOf(borderColor, Color.Transparent))),
         shadowElevation = if (isLight) 8.dp else 0.dp // Add shadow for light mode to pop
