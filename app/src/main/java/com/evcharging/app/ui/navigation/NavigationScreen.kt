@@ -1,21 +1,10 @@
-package com.evcharging.app.ui.navigation
+﻿package com.evcharging.app.ui.navigation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
@@ -23,33 +12,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CallMade
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.PedalBike
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Satellite
-import androidx.compose.material.icons.filled.Traffic
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,17 +28,9 @@ import com.evcharging.app.data.model.Station
 import com.evcharging.app.ui.components.GlassCard
 import com.evcharging.app.ui.components.NeonButton
 import com.evcharging.app.ui.components.VoiceAssistantButton
-import com.evcharging.app.ui.theme.DeepBackground
-import com.evcharging.app.ui.theme.GlassWhite
-import com.evcharging.app.ui.theme.NeonCyan
-import com.evcharging.app.ui.theme.NeonGreen
-import com.evcharging.app.ui.theme.NeonPurple
-import com.evcharging.app.ui.theme.NeonRed
-import com.evcharging.app.ui.theme.TextPrimary
-import com.evcharging.app.ui.theme.TextSecondary
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.isGranted
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -206,7 +163,7 @@ fun NavigationScreen(
                 if (route != null && route!!.points.isNotEmpty()) {
                     Polyline(
                         points = route!!.points,
-                        color = NeonCyan,
+                        color = MaterialTheme.colorScheme.primary,
                         width = 12f,
                         geodesic = true
                     )
@@ -223,7 +180,7 @@ fun NavigationScreen(
                     Marker(
                         state = MarkerState(position = destination),
                         title = "Destination",
-                        snippet = "${route!!.distance} • ${route!!.duration}",
+                        snippet = "${route!!.distance} â€¢ ${route!!.duration}",
                         icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
                     )
                 }
@@ -245,13 +202,13 @@ fun NavigationScreen(
                             mapType = if (mapType == MapType.NORMAL) MapType.SATELLITE else MapType.NORMAL
                         },
                     shape = CircleShape,
-                    containerColor = DeepBackground.copy(alpha = 0.8f)
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
                 ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = if (mapType == MapType.NORMAL) Icons.Filled.Satellite else Icons.Filled.Map,
                             contentDescription = "Map Type",
-                            tint = NeonCyan
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -264,13 +221,13 @@ fun NavigationScreen(
                         .size(50.dp)
                         .clickable { isTrafficEnabled = !isTrafficEnabled },
                     shape = CircleShape,
-                    containerColor = if (isTrafficEnabled) NeonCyan.copy(alpha = 0.3f) else DeepBackground.copy(alpha = 0.8f)
+                    containerColor = if (isTrafficEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
                 ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Filled.Traffic,
                             contentDescription = "Traffic",
-                            tint = if (isTrafficEnabled) NeonCyan else TextSecondary
+                            tint = if (isTrafficEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -283,13 +240,13 @@ fun NavigationScreen(
                         .size(50.dp)
                         .clickable { viewModel.recenterCamera() },
                     shape = CircleShape,
-                    containerColor = DeepBackground.copy(alpha = 0.8f)
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
                 ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Filled.MyLocation,
                             contentDescription = "My Location",
-                            tint = NeonGreen
+                            tint = MaterialTheme.colorScheme.tertiary
                         )
                     }
                 }
@@ -306,8 +263,8 @@ fun NavigationScreen(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(16.dp),
-                        color = DeepBackground.copy(alpha = 0.95f),
-                        border = BorderStroke(1.5.dp, NeonCyan),
+                        color = MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
+                        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
                         shadowElevation = 8.dp
                     ) {
                         Column(modifier = Modifier.padding(8.dp)) {
@@ -323,12 +280,12 @@ fun NavigationScreen(
                                     activeField = "start"
                                     viewModel.search(it)
                                 },
-                                placeholder = { Text("Start Location (Current)", color = TextSecondary) },
+                                placeholder = { Text("Start Location (Current)", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Filled.Place,
                                         contentDescription = "Start",
-                                        tint = NeonCyan
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 },
                                 modifier = Modifier.fillMaxWidth(),
@@ -337,14 +294,14 @@ fun NavigationScreen(
                                     unfocusedContainerColor = Color.Transparent,
                                     focusedIndicatorColor = Color.Transparent,
                                     unfocusedIndicatorColor = Color.Transparent,
-                                    cursorColor = NeonCyan,
-                                    focusedTextColor = TextPrimary,
-                                    unfocusedTextColor = TextPrimary
+                                    cursorColor = MaterialTheme.colorScheme.primary,
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                                 ),
                                 singleLine = true
                             )
 
-                            Divider(color = GlassWhite, thickness = 0.5.dp)
+                            Divider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
 
                             // Destination Input
                             TextField(
@@ -354,12 +311,12 @@ fun NavigationScreen(
                                     activeField = "dest"
                                     viewModel.search(it)
                                 },
-                                placeholder = { Text("Destination Point", color = TextSecondary) },
+                                placeholder = { Text("Destination Point", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Filled.LocationOn,
                                         contentDescription = "Destination",
-                                        tint = NeonRed
+                                        tint = MaterialTheme.colorScheme.error
                                     )
                                 },
                                 modifier = Modifier.fillMaxWidth(),
@@ -368,9 +325,9 @@ fun NavigationScreen(
                                     unfocusedContainerColor = Color.Transparent,
                                     focusedIndicatorColor = Color.Transparent,
                                     unfocusedIndicatorColor = Color.Transparent,
-                                    cursorColor = NeonRed,
-                                    focusedTextColor = TextPrimary,
-                                    unfocusedTextColor = TextPrimary
+                                    cursorColor = MaterialTheme.colorScheme.error,
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                                 ),
                                 singleLine = true
                             )
@@ -400,14 +357,14 @@ fun NavigationScreen(
                                                 }
                                                 .padding(vertical = 8.dp, horizontal = 4.dp)
                                         ) {
-                                            Icon(Icons.Filled.Place, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                            Icon(Icons.Filled.Place, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Column {
-                                                Text(result.primaryText, color = TextPrimary, style = MaterialTheme.typography.bodyMedium)
-                                                Text(result.secondaryText, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                                                Text(result.primaryText, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyMedium)
+                                                Text(result.secondaryText, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                             }
                                         }
-                                        Divider(color = GlassWhite.copy(alpha = 0.1f))
+                                        Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f))
                                     }
                                 }
                             }
@@ -423,7 +380,7 @@ fun NavigationScreen(
                                         text = "Fast Charger",
                                         isSelected = filterType == "Fast",
                                         onClick = { viewModel.setFilterType(if (filterType == "Fast") null else "Fast") },
-                                        color = NeonCyan
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                                 item {
@@ -431,7 +388,7 @@ fun NavigationScreen(
                                         text = "Available",
                                         isSelected = filterStatus == "Available",
                                         onClick = { viewModel.setFilterStatus(if (filterStatus == "Available") null else "Available") },
-                                        color = NeonGreen
+                                        color = MaterialTheme.colorScheme.tertiary
                                     )
                                 }
                                 item {
@@ -439,7 +396,7 @@ fun NavigationScreen(
                                         text = "Under Maintenance",
                                         isSelected = filterStatus == "Operational",
                                         onClick = { viewModel.setFilterStatus(if (filterStatus == "Operational") null else "Operational") },
-                                        color = NeonPurple
+                                        color = MaterialTheme.colorScheme.secondary
                                     )
                                 }
                             }
@@ -465,14 +422,14 @@ fun NavigationScreen(
                                 Icon(
                                     imageVector = directionSteps[0].icon,
                                     contentDescription = "Turn",
-                                    tint = NeonCyan,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column {
-                                    Text(directionSteps[0].distance, style = MaterialTheme.typography.headlineMedium, color = NeonCyan)
-                                    Text(directionSteps[0].instruction, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
-                                    Text("via ${if (selectedMode == TransportMode.CAR) "Car" else "Bike"}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                    Text(directionSteps[0].distance, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+                                    Text(directionSteps[0].instruction, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+                                    Text("via ${if (selectedMode == TransportMode.CAR) "Car" else "Bike"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
@@ -501,17 +458,17 @@ fun NavigationScreen(
                                         icon = Icons.Filled.DirectionsCar,
                                         isSelected = selectedMode == TransportMode.CAR,
                                         onClick = { viewModel.setTransportMode(TransportMode.CAR) },
-                                        color = NeonCyan
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                     ModeTab(
                                         text = "Bike",
                                         icon = Icons.Filled.PedalBike,
                                         isSelected = selectedMode == TransportMode.BIKE,
                                         onClick = { viewModel.setTransportMode(TransportMode.BIKE) },
-                                        color = NeonPurple
+                                        color = MaterialTheme.colorScheme.secondary
                                     )
                                 }
-                                Divider(color = GlassWhite.copy(alpha = 0.3f), thickness = 0.5.dp)
+                                Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), thickness = 0.5.dp)
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
 
@@ -522,20 +479,20 @@ fun NavigationScreen(
                             ) {
                                 Column {
                                     if (isNavigationActive) {
-                                        Text("On Route (${if (selectedMode == TransportMode.CAR) "Car" else "Bike"})", style = MaterialTheme.typography.labelLarge, color = NeonGreen)
+                                        Text("On Route (${if (selectedMode == TransportMode.CAR) "Car" else "Bike"})", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.tertiary)
                                     } else {
-                                        Text("Estimated Trip", style = MaterialTheme.typography.headlineSmall, color = NeonCyan)
+                                        Text("Estimated Trip", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                                     }
 
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Row {
-                                        Icon(Icons.Filled.Place, "Dist", tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Filled.Place, "Dist", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text(route!!.distance, color = TextPrimary, fontWeight = FontWeight.Bold)
+                                        Text(route!!.distance, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
                                         Spacer(modifier = Modifier.width(16.dp))
-                                        Icon(Icons.Filled.LocationOn, "Time", tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Filled.LocationOn, "Time", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text(route!!.duration, color = TextPrimary, fontWeight = FontWeight.Bold)
+                                        Text(route!!.duration, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
                                     }
                                 }
 
@@ -544,14 +501,14 @@ fun NavigationScreen(
                                         text = "End",
                                         onClick = { viewModel.endNavigation() },
                                         modifier = Modifier.height(48.dp),
-                                        color = NeonRed
+                                        color = MaterialTheme.colorScheme.error
                                     )
                                 } else {
                                     NeonButton(
                                         text = "Start",
                                         onClick = { viewModel.startNavigation() },
                                         modifier = Modifier.height(48.dp),
-                                        color = NeonGreen
+                                        color = MaterialTheme.colorScheme.tertiary
                                     )
                                 }
                             }
@@ -578,8 +535,8 @@ fun NavigationScreen(
                 ModalBottomSheet(
                     onDismissRequest = { showBottomSheet = false },
                     sheetState = sheetState,
-                    containerColor = DeepBackground,
-                    contentColor = TextPrimary
+                    containerColor = MaterialTheme.colorScheme.background,
+                    contentColor = MaterialTheme.colorScheme.onBackground
                 ) {
                     StationDetailContent(station = selectedStation!!)
                 }
@@ -587,6 +544,7 @@ fun NavigationScreen(
         }
     }
 }
+
 
 @Composable
 fun StationDetailContent(station: Station) {
@@ -597,14 +555,14 @@ fun StationDetailContent(station: Station) {
             .verticalScroll(rememberScrollState())
     ) {
         // Header
-        Text(text = station.name, style = MaterialTheme.typography.headlineSmall, color = NeonCyan)
-        Text(text = station.address, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+        Text(text = station.name, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+        Text(text = station.address, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Status
         Row(verticalAlignment = Alignment.CenterVertically) {
-            val statusColor = if (station.maintenanceStatus == "Maintenance") NeonRed else NeonGreen
+            val statusColor = if (station.maintenanceStatus == "Maintenance") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
             androidx.compose.foundation.Canvas(modifier = Modifier.size(12.dp)) {
                 drawCircle(color = statusColor)
             }
@@ -620,23 +578,23 @@ fun StationDetailContent(station: Station) {
 
         // Promotions
         if (station.promotions.isNotEmpty()) {
-            Text(text = "Special Offers", style = MaterialTheme.typography.titleMedium, color = NeonPurple)
+            Text(text = "Special Offers", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.secondary)
             Spacer(modifier = Modifier.height(8.dp))
             station.promotions.forEach { promo ->
                 GlassCard(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                 ) {
-                    Text(text = promo["title"] as? String ?: "", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = TextPrimary)
-                    Text(text = promo["description"] as? String ?: "", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                    Text(text = "${promo["discountPercentage"]}% OFF", style = MaterialTheme.typography.labelLarge, color = NeonCyan)
+                    Text(text = promo["title"] as? String ?: "", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                    Text(text = promo["description"] as? String ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(text = "${promo["discountPercentage"]}% OFF", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         // Rewards System
-        Text(text = "Loyalty Rewards", style = MaterialTheme.typography.titleMedium, color = NeonGreen)
-        Text(text = "Earn ${station.pointsPerKw} points per kW", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+        Text(text = "Loyalty Rewards", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.tertiary)
+        Text(text = "Earn ${station.pointsPerKw} points per kW", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(8.dp))
 
         if (station.rewards.isNotEmpty()) {
@@ -651,14 +609,14 @@ fun StationDetailContent(station: Station) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = reward["title"] as? String ?: "", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = TextPrimary)
-                            Text(text = "${reward["pointsCost"]} Points", style = MaterialTheme.typography.labelMedium, color = NeonGreen)
+                            Text(text = reward["title"] as? String ?: "", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                            Text(text = "${reward["pointsCost"]} Points", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.tertiary)
                         }
                         NeonButton(
                             text = "Redeem",
                             onClick = { /* TODO: Implement Redeem Logic */ },
                             modifier = Modifier.height(36.dp),
-                            color = NeonGreen
+                            color = MaterialTheme.colorScheme.tertiary
                         )
                     }
                 }
@@ -668,7 +626,7 @@ fun StationDetailContent(station: Station) {
 
         // Dining
         if (station.dining.isNotEmpty()) {
-            Text(text = "Dining Options", style = MaterialTheme.typography.titleMedium, color = NeonPurple)
+            Text(text = "Dining Options", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.secondary)
             Spacer(modifier = Modifier.height(8.dp))
             station.dining.forEach { item ->
                 GlassCard(
@@ -681,14 +639,15 @@ fun StationDetailContent(station: Station) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = item["name"] as? String ?: "", style = MaterialTheme.typography.titleSmall, color = TextPrimary)
-                            Text(text = item["description"] as? String ?: "", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                            Text(text = item["name"] as? String ?: "", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
+                            Text(text = item["description"] as? String ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Text(text = "$${item["price"]}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NeonCyan)
+                        Text(text = "$${item["price"]}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
         }
+
 
         Spacer(modifier = Modifier.height(32.dp))
     }
@@ -702,8 +661,8 @@ fun ModeTab(
     onClick: () -> Unit,
     color: Color
 ) {
-    val tabColor = if (isSelected) color else GlassWhite.copy(alpha = 0.3f)
-    val contentColor = if (isSelected) DeepBackground else TextSecondary
+    val tabColor = if (isSelected) color else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         modifier = Modifier
@@ -730,7 +689,7 @@ fun FilterChip(
     color: Color
 ) {
     val backgroundColor = if (isSelected) color.copy(alpha = 0.2f) else Color.Transparent
-    val borderColor = if (isSelected) color else GlassWhite.copy(alpha = 0.5f)
+    val borderColor = if (isSelected) color else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
 
     Box(
         modifier = Modifier
@@ -740,6 +699,6 @@ fun FilterChip(
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
-        Text(text, style = MaterialTheme.typography.labelMedium, color = if (isSelected) color else TextPrimary)
+        Text(text, style = MaterialTheme.typography.labelMedium, color = if (isSelected) color else MaterialTheme.colorScheme.onBackground)
     }
 }

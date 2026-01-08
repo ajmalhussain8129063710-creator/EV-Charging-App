@@ -35,7 +35,7 @@ import androidx.navigation.NavController
 import com.evcharging.app.ui.components.GlassCard
 import com.evcharging.app.ui.components.NeonButton
 import com.evcharging.app.ui.components.SectionHeader
-import com.evcharging.app.ui.theme.*
+
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -116,24 +116,24 @@ fun BookingDetailScreen(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {}, // Hidden as requested
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel", color = NeonCyan) }
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel", color = MaterialTheme.colorScheme.primary) }
             },
             colors = DatePickerDefaults.colors(
-                containerColor = CardBackground,
-                titleContentColor = NeonCyan,
-                headlineContentColor = TextPrimary,
-                weekdayContentColor = TextSecondary,
-                subheadContentColor = TextSecondary,
-                yearContentColor = TextPrimary,
-                currentYearContentColor = NeonCyan,
-                selectedYearContentColor = TextPrimary,
-                selectedYearContainerColor = NeonCyan,
-                dayContentColor = TextPrimary,
-                disabledDayContentColor = TextSecondary,
-                selectedDayContentColor = DeepBackground,
-                selectedDayContainerColor = NeonCyan,
-                todayContentColor = NeonCyan,
-                todayDateBorderColor = NeonCyan
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.primary,
+                headlineContentColor = MaterialTheme.colorScheme.onBackground,
+                weekdayContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                subheadContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                yearContentColor = MaterialTheme.colorScheme.onBackground,
+                currentYearContentColor = MaterialTheme.colorScheme.primary,
+                selectedYearContentColor = MaterialTheme.colorScheme.onBackground,
+                selectedYearContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                dayContentColor = MaterialTheme.colorScheme.onBackground,
+                disabledDayContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
+                selectedDayContainerColor = MaterialTheme.colorScheme.primary,
+                todayContentColor = MaterialTheme.colorScheme.primary,
+                todayDateBorderColor = MaterialTheme.colorScheme.primary
             )
         ) {
             DatePicker(state = datePickerState)
@@ -144,8 +144,8 @@ fun BookingDetailScreen(
     if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
-            title = { Text("Cancel Booking?", color = TextPrimary) },
-            text = { Text("Are you sure you want to cancel? The amount will be refunded to your original payment method.", color = TextSecondary) },
+            title = { Text("Cancel Booking?", color = MaterialTheme.colorScheme.onBackground) },
+            text = { Text("Are you sure you want to cancel? The amount will be refunded to your original payment method.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 NeonButton(
                     text = "Yes, Cancel",
@@ -153,15 +153,15 @@ fun BookingDetailScreen(
                         viewModel.cancelBooking()
                         showCancelDialog = false
                     },
-                    color = NeonRed
+                    color = MaterialTheme.colorScheme.error
                 )
             },
             dismissButton = {
                 TextButton(onClick = { showCancelDialog = false }) {
-                    Text("No, Keep it", color = NeonCyan)
+                    Text("No, Keep it", color = MaterialTheme.colorScheme.primary)
                 }
             },
-            containerColor = CardBackground
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
@@ -191,14 +191,14 @@ fun BookingDetailScreen(
                             modifier = Modifier
                                 .size(80.dp)
                                 .scale(scale),
-                            tint = NeonGreen
+                            tint = MaterialTheme.colorScheme.tertiary
                         )
                         // Outer ripple effect (simulated with border)
                         Box(
                             modifier = Modifier
                                 .size(100.dp)
                                 .scale(scale)
-                                .border(2.dp, NeonGreen.copy(alpha = 0.5f), CircleShape)
+                                .border(2.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f), CircleShape)
                         )
                     }
                     
@@ -207,13 +207,13 @@ fun BookingDetailScreen(
                         text = "Payment Successful!",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Redirecting to Home...",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -231,27 +231,27 @@ fun BookingDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Booking Details", fontWeight = FontWeight.SemiBold, color = TextPrimary) },
+                title = { Text("Booking Details", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = DeepBackground,
-                    scrolledContainerColor = DeepBackground
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = DeepBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFF0F1525), DeepBackground),
+                        colors = listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.background),
                         startY = 0f,
                         endY = 1000f
                     )
@@ -267,15 +267,15 @@ fun BookingDetailScreen(
                  // Station Details Card
                  GlassCard {
                     Column(horizontalAlignment = Alignment.Start) {
-                         Text(text = stationName, style = MaterialTheme.typography.headlineMedium, color = NeonCyan)
+                         Text(text = stationName, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
                          Spacer(modifier = Modifier.height(8.dp))
                          Row(verticalAlignment = Alignment.CenterVertically) {
-                             Icon(Icons.Default.LocationOn, contentDescription = null, tint = NeonPurple, modifier = Modifier.size(20.dp))
+                             Icon(Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(20.dp))
                              Spacer(modifier = Modifier.width(8.dp))
-                             Text(text = stationAddress, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                             Text(text = stationAddress, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                          }
                          Spacer(modifier = Modifier.height(8.dp))
-                         Text(text = "$pricePerKwh", style = MaterialTheme.typography.titleMedium, color = NeonGreen)
+                         Text(text = "$pricePerKwh", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.tertiary)
                     }
                  }
                 
@@ -294,18 +294,18 @@ fun BookingDetailScreen(
                              horizontalArrangement = Arrangement.SpaceBetween,
                              verticalAlignment = Alignment.CenterVertically
                          ) {
-                             Text("Select Date", color = TextPrimary)
+                             Text("Select Date", color = MaterialTheme.colorScheme.onBackground)
                              Text(
                                  text = if (selectedDate != null) java.text.SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(selectedDate!!)) else "Choose Date",
-                                 color = if (selectedDate != null) NeonCyan else TextSecondary,
+                                 color = if (selectedDate != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                  fontWeight = FontWeight.Bold
                              )
                          }
                          
-                         Divider(color = GlassWhite)
+                         Divider(color = MaterialTheme.colorScheme.outlineVariant)
                          
                          // Time Slots
-                         Text("Select Time Slot", color = TextPrimary, modifier = Modifier.padding(vertical = 8.dp))
+                         Text("Select Time Slot", color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(vertical = 8.dp))
                          LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                              val slots = listOf("09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM")
                              items(slots) { slot ->
@@ -313,14 +313,14 @@ fun BookingDetailScreen(
                                  Box(
                                      modifier = Modifier
                                          .clip(RoundedCornerShape(8.dp))
-                                         .background(if (isSelected) NeonCyan else GlassSurface)
-                                         .border(1.dp, if (isSelected) NeonCyan else GlassWhite, RoundedCornerShape(8.dp))
+                                         .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                         .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
                                          .clickable { selectedSlot = slot }
                                          .padding(horizontal = 16.dp, vertical = 8.dp)
                                  ) {
                                      Text(
                                          text = slot, 
-                                         color = if (isSelected) DeepBackground else TextPrimary,
+                                         color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground,
                                          fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                      )
                                  }
@@ -338,16 +338,16 @@ fun BookingDetailScreen(
                         items(diningList) { item ->
                             GlassCard(modifier = Modifier.width(160.dp)) {
                                 Column {
-                                    Text(item.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = TextPrimary)
-                                    Text(item.description, style = MaterialTheme.typography.bodySmall, maxLines = 2, color = TextSecondary)
+                                    Text(item.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                                    Text(item.description, style = MaterialTheme.typography.bodySmall, maxLines = 2, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text("$${item.price}", color = NeonGreen, fontWeight = FontWeight.Bold)
+                                    Text("$${item.price}", color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
                     }
                 } else {
-                     Text("No dining options available.", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                     Text("No dining options available.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -357,20 +357,20 @@ fun BookingDetailScreen(
                 GlassCard {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { paymentMethod = "Wallet" }) {
-                            RadioButton(selected = paymentMethod == "Wallet", onClick = { paymentMethod = "Wallet" }, colors = RadioButtonDefaults.colors(selectedColor = NeonCyan, unselectedColor = TextSecondary))
-                            Text("Wallet (Balance: $$walletBalance)", color = TextPrimary)
+                            RadioButton(selected = paymentMethod == "Wallet", onClick = { paymentMethod = "Wallet" }, colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant))
+                            Text("Wallet (Balance: $$walletBalance)", color = MaterialTheme.colorScheme.onBackground)
                              if (paymentMethod == "Wallet") {
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("10% OFF", color = NeonGreen, style = MaterialTheme.typography.labelSmall)
+                                Text("10% OFF", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { paymentMethod = "Card" }) {
-                            RadioButton(selected = paymentMethod == "Card", onClick = { paymentMethod = "Card" }, colors = RadioButtonDefaults.colors(selectedColor = NeonCyan, unselectedColor = TextSecondary))
-                            Text("Credit/Debit Card", color = TextPrimary)
+                            RadioButton(selected = paymentMethod == "Card", onClick = { paymentMethod = "Card" }, colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant))
+                            Text("Credit/Debit Card", color = MaterialTheme.colorScheme.onBackground)
                         }
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { paymentMethod = "Cash" }) {
-                            RadioButton(selected = paymentMethod == "Cash", onClick = { paymentMethod = "Cash" }, colors = RadioButtonDefaults.colors(selectedColor = NeonCyan, unselectedColor = TextSecondary))
-                            Text("Pay at Station", color = TextPrimary)
+                            RadioButton(selected = paymentMethod == "Cash", onClick = { paymentMethod = "Cash" }, colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant))
+                            Text("Pay at Station", color = MaterialTheme.colorScheme.onBackground)
                         }
                     }
                 }
@@ -381,19 +381,19 @@ fun BookingDetailScreen(
                 GlassCard {
                     Column {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                             Text("Est. Charge (20kWh)", color = TextSecondary)
-                             Text("$${String.format("%.2f", subtotal)}", color = TextPrimary)
+                             Text("Est. Charge (20kWh)", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                             Text("$${String.format("%.2f", subtotal)}", color = MaterialTheme.colorScheme.onBackground)
                         }
                         if (discount > 0) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                 Text("Wallet Discount", color = NeonGreen)
-                                 Text("-$${String.format("%.2f", discount)}", color = NeonGreen)
+                                 Text("Wallet Discount", color = MaterialTheme.colorScheme.tertiary)
+                                 Text("-$${String.format("%.2f", discount)}", color = MaterialTheme.colorScheme.tertiary)
                             }
                         }
-                        Divider(color = GlassWhite, modifier = Modifier.padding(vertical = 8.dp))
+                        Divider(color = MaterialTheme.colorScheme.outlineVariant, modifier = Modifier.padding(vertical = 8.dp))
                          Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                             Text("Total to Pay", fontWeight = FontWeight.Bold, color = TextPrimary)
-                             Text("$${String.format("%.2f", total)}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge, color = NeonCyan)
+                             Text("Total to Pay", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                             Text("$${String.format("%.2f", total)}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -420,7 +420,7 @@ fun BookingDetailScreen(
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        color = NeonCyan
+                        color = MaterialTheme.colorScheme.primary
                     )
                 } else if (bookingState is BookingState.Cancelled) {
                      NeonButton(

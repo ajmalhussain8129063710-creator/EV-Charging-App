@@ -1,4 +1,4 @@
-package com.evcharging.app.ui.components
+﻿package com.evcharging.app.ui.components
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
@@ -40,7 +40,9 @@ fun Car3DViewer(
     var showColorPicker by remember { mutableStateOf(false) }
     var selectedColor by remember { mutableStateOf(carColor) }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
-
+    
+    val context = androidx.compose.ui.platform.LocalContext.current
+    
     // RGB Helper
     fun Color.toJsRgba(): String {
         return "[${this.red}, ${this.green}, ${this.blue}, 1.0]"
@@ -61,16 +63,44 @@ fun Car3DViewer(
         )
     }
 
+    LaunchedEffect(modelUrl) {
+        webViewRef?.evaluateJavascript(
+            """
+            try {
+                const viewer = document.querySelector('model-viewer');
+                if (viewer) {
+                    viewer.src = '$modelUrl';
+                }
+            } catch(e) { console.error(e); }
+            """.trimIndent(), null
+        )
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            webViewRef?.destroy()
+            webViewRef = null
+        }
+    }
+
     Box(modifier = modifier) {
         // 3D Scene via WebView (Model Viewer)
         AndroidView(
-            factory = { context ->
-                WebView(context).apply {
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled = true
-                    settings.allowFileAccess = true
-                    settings.allowContentAccess = true
-                    settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            factory = { ctx ->
+                WebView(ctx).apply {
+                    settings.apply {
+                        javaScriptEnabled = true
+                        domStorageEnabled = true
+                        allowFileAccess = true
+                        allowContentAccess = true
+                        mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                        // Performance optimizations
+                        setRenderPriority(android.webkit.WebSettings.RenderPriority.HIGH)
+                        cacheMode = android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK
+                    }
+                    
+                    // Enable Hardware Acceleration
+                    setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
                     setBackgroundColor(android.graphics.Color.TRANSPARENT)
                     
                     webChromeClient = object : WebChromeClient() {
@@ -81,7 +111,7 @@ fun Car3DViewer(
                     }
                     
                     loadDataWithBaseURL(
-                        null, 
+                        "https://example.com", // Base URL to avoid null safety issues with some assets
                         """
                         <!DOCTYPE html>
                         <html>
@@ -151,12 +181,13 @@ fun Car3DViewer(
                 }.also { webViewRef = it }
             },
             update = { view ->
-                // Update URL if changed (re-load)
-                 // For now assumes modelUrl doesn't change often or whole composable recomposes
+                // Ensure layer type is hardware
+                if (view.layerType != android.view.View.LAYER_TYPE_HARDWARE) {
+                    view.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+                }
             },
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable { showColorPicker = !showColorPicker } // WebView consumes clicks, might need overlay
+            modifier = Modifier.fillMaxSize() 
+            // Removed clickable modifier on AndroidView to prevent conflict with WebView touch events
         )
         
         // Touch Overlay to capture clicks specifically for the picker toggle
@@ -175,7 +206,7 @@ fun Car3DViewer(
                 .clickable { showColorPicker = !showColorPicker },
             contentAlignment = Alignment.Center
         ) {
-            Text("🎨", style = MaterialTheme.typography.bodyLarge)
+            Text("ðŸŽ¨", style = MaterialTheme.typography.bodyLarge)
         }
 
         // Color Picker Overlay
@@ -198,7 +229,7 @@ fun Car3DViewer(
                     .padding(16.dp)
             ) {
                  Text("EV Model X", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                 Text("Charging: 85%", style = MaterialTheme.typography.bodyMedium, color = com.evcharging.app.ui.theme.NeonGreen)
+                 Text("Charging: 85%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.tertiary)
             }
         }
     }
@@ -213,7 +244,7 @@ fun ColorPickerWheel(
     // Simplified Color Picker (List of nice car colors)
     val colors = listOf(
         Color.Red, Color.Blue, Color.Black, Color.White, Color.Gray, 
-        com.evcharging.app.ui.theme.NeonCyan, com.evcharging.app.ui.theme.NeonPurple
+        MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary
     )
 
     Surface(

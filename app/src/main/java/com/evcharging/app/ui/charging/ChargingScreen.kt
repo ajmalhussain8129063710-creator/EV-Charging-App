@@ -14,11 +14,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.evcharging.app.ui.components.NeonButton
-import com.evcharging.app.ui.theme.DeepBackground
-import com.evcharging.app.ui.theme.NeonCyan
-import com.evcharging.app.ui.theme.NeonGreen
-import com.evcharging.app.ui.theme.TextPrimary
-import com.evcharging.app.ui.theme.TextSecondary
+
 import kotlinx.coroutines.delay
 
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -44,7 +40,7 @@ fun ChargingScreen(
     }
 
     Scaffold(
-        containerColor = DeepBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -54,7 +50,7 @@ fun ChargingScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Charging in Progress", style = MaterialTheme.typography.headlineMedium, color = NeonGreen)
+            Text("Charging in Progress", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.tertiary)
             Spacer(modifier = Modifier.height(32.dp))
             
             // Animation
@@ -67,22 +63,22 @@ fun ChargingScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-    // Stats
-            Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.displayLarge, color = NeonCyan)
+            // Stats
+            Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Energy", color = TextSecondary)
-                    Text(String.format("%.1f kWh", kwhCharged), color = TextPrimary, style = MaterialTheme.typography.titleLarge)
+                    Text("Energy", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(String.format("%.1f kWh", kwhCharged), color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Time Left", color = TextSecondary)
+                    Text("Time Left", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     // Calculate remaining seconds based on 20 mins (1200 seconds) total
                     val totalSeconds = 1200
                     val remainingSeconds = (totalSeconds * (1f - progress)).toInt()
                     val minutes = remainingSeconds / 60
                     val seconds = remainingSeconds % 60
-                    Text(String.format("%02d:%02d", minutes, seconds), color = TextPrimary, style = MaterialTheme.typography.titleLarge)
+                    Text(String.format("%02d:%02d", minutes, seconds), color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge)
                 }
             }
             
@@ -97,14 +93,14 @@ fun ChargingScreen(
                              popUpTo("home") { inclusive = true }
                         }
                     },
-                    color = NeonGreen,
+                    color = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
                 NeonButton(
                     text = "Stop Charging",
                     onClick = { navController.popBackStack() },
-                    color = com.evcharging.app.ui.theme.NeonRed,
+                    color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

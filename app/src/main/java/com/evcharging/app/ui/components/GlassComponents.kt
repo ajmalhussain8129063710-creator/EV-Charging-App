@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.evcharging.app.ui.theme.*
+
 
 @Composable
 fun GlassCard(
@@ -35,13 +35,13 @@ fun GlassCard(
     val finalContainerColor = containerColor ?: if (isLight) {
         Color.White.copy(alpha = 0.7f) // Frosted White for Light Mode
     } else {
-        GlassSurface // 10% White for Dark Mode
+        MaterialTheme.colorScheme.surfaceVariant // 10% White for Dark Mode (mapped to SurfaceVariant in Theme)
     }
     
     val borderColor = if (isLight) {
         Color.White.copy(alpha = 0.9f)
     } else {
-        GlassWhite
+        MaterialTheme.colorScheme.outlineVariant
     }
 
     Surface(
@@ -63,7 +63,7 @@ fun NeonButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    color: Color = NeonCyan
+    color: Color = MaterialTheme.colorScheme.primary
 ) {
     Box(
         modifier = modifier
@@ -90,7 +90,7 @@ fun SectionHeader(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleLarge,
-        color = NeonCyan,
+        color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(vertical = 8.dp)
     )
 }

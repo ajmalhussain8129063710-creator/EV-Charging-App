@@ -1,4 +1,4 @@
-package com.evcharging.app.ui.home
+﻿package com.evcharging.app.ui.home
 
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.clickable
@@ -35,11 +35,6 @@ import com.evcharging.app.ui.components.Car3DViewer
 import com.evcharging.app.ui.components.GlassCard
 import com.evcharging.app.ui.components.NeonButton
 import com.evcharging.app.ui.components.VoiceAssistantButton
-import com.evcharging.app.ui.theme.GlassSurface
-import com.evcharging.app.ui.theme.GlassWhite
-import com.evcharging.app.ui.theme.NeonCyan
-import com.evcharging.app.ui.theme.NeonGreen
-import com.evcharging.app.ui.theme.NeonRed
     
 @Composable
 fun HomeScreen(
@@ -117,8 +112,8 @@ fun HomeScreen(
                     Box(
                         modifier = Modifier
                             .size(40.dp)
-                            .background(GlassSurface, CircleShape)
-                            .border(1.dp, GlassWhite, CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
                             .clickable { showMenu = true },
                         contentAlignment = Alignment.Center
                     ) {
@@ -232,7 +227,7 @@ fun HomeScreen(
                     Text(
                         text = "Active Booking",
                         style = MaterialTheme.typography.titleMedium,
-                        color = NeonGreen,
+                        color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.align(Alignment.Start)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -263,7 +258,7 @@ fun HomeScreen(
                                         Text(dateString, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                                     }
                                     Column(horizontalAlignment = Alignment.End) {
-                                        Text(status, color = if(status == "Charging") NeonGreen else MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                        Text(status, color = if(status == "Charging") MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                                         Text("$${booking["amount"]}", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), style = MaterialTheme.typography.titleMedium)
                                     }
                                 }
@@ -277,7 +272,7 @@ fun HomeScreen(
                                                 viewModel.startCharging(booking["id"] as String)
                                                 navController.navigate("charging/${booking["id"]}")
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
                                             modifier = Modifier.weight(1f).height(36.dp),
                                             contentPadding = PaddingValues(0.dp)
                                         ) {
@@ -285,8 +280,8 @@ fun HomeScreen(
                                         }
                                         OutlinedButton(
                                             onClick = { bookingToCancel = booking["id"] as String },
-                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonRed),
-                                            border = BorderStroke(1.dp, NeonRed),
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
                                             modifier = Modifier.weight(1f).height(36.dp),
                                             contentPadding = PaddingValues(0.dp)
                                         ) {
@@ -296,7 +291,7 @@ fun HomeScreen(
                                 } else if (status == "Charging") {
                                      Button(
                                         onClick = { navController.navigate("charging/${booking["id"]}") },
-                                        colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
                                         modifier = Modifier.fillMaxWidth().height(36.dp)
                                     ) {
                                         Text("View Charging Session")
@@ -324,14 +319,14 @@ fun HomeScreen(
                                         viewModel.cancelBooking(bookingToCancel!!)
                                         bookingToCancel = null
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = NeonRed)
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                                 ) {
                                     Text("Yes")
                                 }
                             },
                             dismissButton = {
                                 TextButton(onClick = { bookingToCancel = null }) {
-                                    Text("No", color = NeonCyan)
+                                    Text("No", color = MaterialTheme.colorScheme.primary)
                                 }
                             },
                             containerColor = MaterialTheme.colorScheme.surface,
@@ -352,7 +347,7 @@ fun HomeScreen(
                         title = "Battery",
                         value = "85%",
                         icon = Icons.Default.BatteryChargingFull,
-                        color = NeonGreen,
+                        color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.weight(1f)
                     )
                     StatusCard(

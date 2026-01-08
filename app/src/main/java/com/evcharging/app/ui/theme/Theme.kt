@@ -50,7 +50,7 @@ private val LightColorScheme = androidx.compose.material3.lightColorScheme(
 
 @Composable
 fun EVChargingAppTheme(
-    darkTheme: Boolean = true, // Default to Dark
+    darkTheme: Boolean = isSystemInDarkTheme(), // Default to System Setting
     dynamicColor: Boolean = false, // Disable dynamic color
     content: @Composable () -> Unit
 ) {

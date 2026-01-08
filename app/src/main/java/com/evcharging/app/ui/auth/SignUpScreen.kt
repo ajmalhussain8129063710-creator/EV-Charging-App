@@ -19,9 +19,7 @@ import androidx.navigation.NavController
 import com.evcharging.app.ui.components.GlassCard
 import com.evcharging.app.ui.components.NeonButton
 import com.evcharging.app.ui.components.SearchableDropdown
-import com.evcharging.app.ui.theme.DeepBackground
-import com.evcharging.app.ui.theme.NeonCyan
-import com.evcharging.app.ui.theme.NeonPurple
+
 
 @Composable
 fun SignUpScreen(
@@ -50,10 +48,10 @@ fun SignUpScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DeepBackground)
+            .background(MaterialTheme.colorScheme.background)
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0F1525), DeepBackground),
+                    colors = listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.background),
                     startY = 0f,
                     endY = 1000f
                 )
@@ -72,7 +70,7 @@ fun SignUpScreen(
             Text(
                 text = "Join the Future",
                 style = MaterialTheme.typography.displayMedium,
-                color = NeonCyan
+                color = MaterialTheme.colorScheme.primary
             )
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -86,11 +84,11 @@ fun SignUpScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonCyan,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            focusedLabelColor = NeonCyan,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
                             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            cursorColor = NeonCyan
+                            cursorColor = MaterialTheme.colorScheme.primary
                         ),
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                             imeAction = androidx.compose.ui.text.input.ImeAction.Next
@@ -106,11 +104,11 @@ fun SignUpScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonCyan,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            focusedLabelColor = NeonCyan,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
                             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            cursorColor = NeonCyan
+                            cursorColor = MaterialTheme.colorScheme.primary
                         ),
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                             imeAction = androidx.compose.ui.text.input.ImeAction.Next
@@ -131,11 +129,11 @@ fun SignUpScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonCyan,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            focusedLabelColor = NeonCyan,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
                             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            cursorColor = NeonCyan
+                            cursorColor = MaterialTheme.colorScheme.primary
                         )
                     )
 
@@ -149,11 +147,11 @@ fun SignUpScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonCyan,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            focusedLabelColor = NeonCyan,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
                             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            cursorColor = NeonCyan
+                            cursorColor = MaterialTheme.colorScheme.primary
                         ),
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                             keyboardType = KeyboardType.Password,
@@ -164,7 +162,7 @@ fun SignUpScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Vehicle Type Selection
-                    Text("Select Vehicle Type", style = MaterialTheme.typography.titleMedium, color = NeonCyan)
+                    Text("Select Vehicle Type", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                     Row(
                         verticalAlignment = Alignment.CenterVertically, 
                         modifier = Modifier.fillMaxWidth(),
@@ -179,7 +177,7 @@ fun SignUpScreen(
                                     viewModel.setVehicleType("Car")
                                     carModel = ""
                                 },
-                                colors = RadioButtonDefaults.colors(selectedColor = NeonCyan, unselectedColor = NeonPurple)
+                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.secondary)
                             )
                             Text("Car", color = MaterialTheme.colorScheme.onSurface)
                         }
@@ -191,7 +189,7 @@ fun SignUpScreen(
                                     viewModel.setVehicleType("Bike")
                                     carModel = ""
                                 },
-                                colors = RadioButtonDefaults.colors(selectedColor = NeonCyan, unselectedColor = NeonPurple)
+                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.secondary)
                             )
                             Text("Bike", color = MaterialTheme.colorScheme.onSurface)
                         }
@@ -228,13 +226,13 @@ fun SignUpScreen(
                             viewModel.signUp(email, password, name, carModel, carColor, phoneNumber, type) 
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        color = NeonCyan
+                        color = MaterialTheme.colorScheme.primary
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     TextButton(onClick = { navController.navigate("login") }) {
-                        Text("Already have an account? Login", color = NeonCyan)
+                        Text("Already have an account? Login", color = MaterialTheme.colorScheme.primary)
                     }
                     
                     if (authState is AuthState.Error) {

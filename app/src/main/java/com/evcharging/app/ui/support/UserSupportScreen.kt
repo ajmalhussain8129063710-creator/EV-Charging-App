@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import com.evcharging.app.ui.support.ChatViewModel
 import com.evcharging.app.ui.support.ChatMessage
 import com.evcharging.app.ui.components.GlassCard
-import com.evcharging.app.ui.theme.*
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,26 +49,26 @@ fun UserSupportScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Help & Support", color = TextPrimary) },
+                title = { Text("Help & Support", color = MaterialTheme.colorScheme.onBackground) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = DeepBackground,
-                    scrolledContainerColor = DeepBackground
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
-        containerColor = DeepBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFF0F1525), DeepBackground),
+                        colors = listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.background),
                         startY = 0f,
                         endY = 1000f
                     )
@@ -110,16 +110,16 @@ fun UserSupportScreen(
                         OutlinedTextField(
                             value = inputText,
                             onValueChange = { inputText = it },
-                            placeholder = { Text("Type a message...", color = TextSecondary) },
+                            placeholder = { Text("Type a message...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(24.dp),
                             maxLines = 3,
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color.Transparent,
                                 unfocusedBorderColor = Color.Transparent,
-                                focusedTextColor = TextPrimary,
-                                unfocusedTextColor = TextPrimary,
-                                cursorColor = NeonCyan,
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                cursorColor = MaterialTheme.colorScheme.primary,
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             )
@@ -134,10 +134,10 @@ fun UserSupportScreen(
                             },
                             enabled = inputText.isNotBlank(),
                             colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = NeonCyan,
-                                contentColor = DeepBackground,
-                                disabledContainerColor = GlassSurface,
-                                disabledContentColor = TextSecondary
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         ) {
                             Icon(Icons.Default.Send, contentDescription = "Send")
@@ -168,11 +168,11 @@ fun ChatBubble(message: ChatMessage) {
                     )
                 )
                 .background(
-                    if (isUser) NeonCyan.copy(alpha = 0.2f) else GlassSurface
+                    if (isUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 )
                 .border(
                     1.dp,
-                    if (isUser) NeonCyan.copy(alpha = 0.5f) else GlassWhite,
+                    if (isUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant,
                     RoundedCornerShape(
                         topStart = 16.dp,
                         topEnd = 16.dp,
@@ -184,14 +184,14 @@ fun ChatBubble(message: ChatMessage) {
         ) {
             Text(
                 text = message.text,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = if (isUser) "You" else "Assistant",
             style = MaterialTheme.typography.labelSmall,
-            color = TextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -201,10 +201,10 @@ fun TypingIndicator() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .background(GlassSurface, RoundedCornerShape(16.dp))
-            .border(1.dp, GlassWhite, RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
             .padding(12.dp)
     ) {
-        Text("Assistant is typing...", style = MaterialTheme.typography.bodySmall, color = NeonCyan)
+        Text("Assistant is typing...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
     }
 }

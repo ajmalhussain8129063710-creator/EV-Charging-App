@@ -75,27 +75,27 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit Profile", color = TextPrimary) },
+                title = { Text("Edit Profile", color = MaterialTheme.colorScheme.onBackground) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = DeepBackground,
-                    scrolledContainerColor = DeepBackground
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = DeepBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFF0F1525), DeepBackground),
+                        colors = listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.background),
                         startY = 0f,
                         endY = 1000f
                     )
@@ -103,7 +103,7 @@ fun ProfileScreen(
         ) {
             if (isLoading && userProfile.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = NeonCyan)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             } else {
                 Column(
@@ -117,15 +117,15 @@ fun ProfileScreen(
                     Box(
                         modifier = Modifier
                             .size(120.dp)
-                            .background(GlassSurface, androidx.compose.foundation.shape.CircleShape)
-                            .border(2.dp, NeonCyan, androidx.compose.foundation.shape.CircleShape),
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape)
+                            .border(2.dp, MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile",
                             modifier = Modifier.size(60.dp),
-                            tint = NeonCyan
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                     
@@ -133,22 +133,22 @@ fun ProfileScreen(
                     
                     GlassCard {
                         Column(horizontalAlignment = Alignment.Start) {
-                            Text("Edit Your Details", style = MaterialTheme.typography.headlineSmall, color = NeonPurple)
+                            Text("Edit Your Details", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.secondary)
                             
                             Spacer(modifier = Modifier.height(24.dp))
                             
                             OutlinedTextField(
                                 value = name,
                                 onValueChange = { name = it },
-                                label = { Text("Full Name", color = TextSecondary) },
+                                label = { Text("Full Name", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = NeonCyan,
-                                    unfocusedBorderColor = GlassWhite,
-                                    focusedTextColor = TextPrimary,
-                                    unfocusedTextColor = TextPrimary,
-                                    cursorColor = NeonCyan
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    cursorColor = MaterialTheme.colorScheme.primary
                                 ),
                                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                                     imeAction = androidx.compose.ui.text.input.ImeAction.Done
@@ -174,26 +174,26 @@ fun ProfileScreen(
                                     value = carModel,
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = { Text("Vehicle Model", color = TextSecondary) },
+                                    label = { Text("Vehicle Model", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedModel) },
                                     singleLine = true,
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = NeonCyan,
-                                        unfocusedBorderColor = GlassWhite,
-                                        focusedTextColor = TextPrimary,
-                                        unfocusedTextColor = TextPrimary,
-                                        cursorColor = NeonCyan
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                        cursorColor = MaterialTheme.colorScheme.primary
                                     ),
                                     modifier = Modifier.menuAnchor().fillMaxWidth()
                                 )
                                 ExposedDropdownMenu(
                                     expanded = expandedModel,
                                     onDismissRequest = { expandedModel = false },
-                                    modifier = Modifier.background(CardBackground)
+                                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                                 ) {
                                     carModels.forEach { model ->
                                         DropdownMenuItem(
-                                            text = { Text(model, color = TextPrimary) },
+                                            text = { Text(model, color = MaterialTheme.colorScheme.onSurface) },
                                             onClick = {
                                                 carModel = model
                                                 expandedModel = false
@@ -216,26 +216,26 @@ fun ProfileScreen(
                                     value = carColor,
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = { Text("Vehicle Color", color = TextSecondary) },
+                                    label = { Text("Vehicle Color", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedColor) },
                                     singleLine = true,
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = NeonCyan,
-                                        unfocusedBorderColor = GlassWhite,
-                                        focusedTextColor = TextPrimary,
-                                        unfocusedTextColor = TextPrimary,
-                                        cursorColor = NeonCyan
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                        cursorColor = MaterialTheme.colorScheme.primary
                                     ),
                                     modifier = Modifier.menuAnchor().fillMaxWidth()
                                 )
                                 ExposedDropdownMenu(
                                     expanded = expandedColor,
                                     onDismissRequest = { expandedColor = false },
-                                    modifier = Modifier.background(CardBackground)
+                                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                                 ) {
                                     carColors.forEach { color ->
                                         DropdownMenuItem(
-                                            text = { Text(color, color = TextPrimary) },
+                                            text = { Text(color, color = MaterialTheme.colorScheme.onSurface) },
                                             onClick = {
                                                 carColor = color
                                                 expandedColor = false
@@ -253,7 +253,7 @@ fun ProfileScreen(
                         text = if (isLoading) "Saving..." else "Save Changes",
                         onClick = { viewModel.updateUserProfile(name, carModel, carColor) },
                         modifier = Modifier.fillMaxWidth(),
-                        color = NeonCyan
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }

@@ -11,9 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.evcharging.app.ui.theme.NeonCyan
-import com.evcharging.app.ui.theme.TextPrimary
-import com.evcharging.app.ui.theme.TextSecondary
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 
@@ -88,7 +86,7 @@ fun SettingsScreen(
                         checked = isDarkTheme,
                         onCheckedChange = { viewModel.toggleTheme(it) },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = NeonCyan,
+                            checkedThumbColor = MaterialTheme.colorScheme.primary,
                             checkedTrackColor = MaterialTheme.colorScheme.secondaryContainer,
                             uncheckedThumbColor = MaterialTheme.colorScheme.outline
                         )

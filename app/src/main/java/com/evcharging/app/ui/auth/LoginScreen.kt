@@ -15,8 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.evcharging.app.ui.components.GlassCard
 import com.evcharging.app.ui.components.NeonButton
-import com.evcharging.app.ui.theme.DeepBackground
-import com.evcharging.app.ui.theme.NeonCyan
+
 
 @Composable
 fun LoginScreen(
@@ -39,10 +38,10 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DeepBackground)
+            .background(MaterialTheme.colorScheme.background)
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0F1525), DeepBackground),
+                    colors = listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.background),
                     startY = 0f,
                     endY = 1000f
                 )
@@ -58,7 +57,7 @@ fun LoginScreen(
                 Text(
                     text = "Welcome Back",
                     style = MaterialTheme.typography.displayMedium,
-                    color = NeonCyan
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = "Sign in to continue",
@@ -75,11 +74,11 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = NeonCyan,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        focusedLabelColor = NeonCyan,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
                         unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        cursorColor = NeonCyan
+                        cursorColor = MaterialTheme.colorScheme.primary
                     ),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Email,
@@ -97,11 +96,11 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = NeonCyan,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        focusedLabelColor = NeonCyan,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
                         unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        cursorColor = NeonCyan
+                        cursorColor = MaterialTheme.colorScheme.primary
                     ),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Password,
@@ -118,7 +117,7 @@ fun LoginScreen(
                     text = if (authState is AuthState.Loading) "Authenticating..." else "LOGIN",
                     onClick = { viewModel.login(email, password) },
                     modifier = Modifier.fillMaxWidth(),
-                    color = NeonCyan
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -126,7 +125,7 @@ fun LoginScreen(
                 TextButton(onClick = { navController.navigate("signup") }) {
                     Text(
                         "Don't have an account? Sign Up",
-                        color = NeonCyan
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 

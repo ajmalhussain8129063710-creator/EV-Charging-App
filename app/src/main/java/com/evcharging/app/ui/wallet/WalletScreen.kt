@@ -44,7 +44,8 @@ fun WalletScreen(
         Text(
             text = "My Wallet",
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
         
         Spacer(modifier = Modifier.height(24.dp))
@@ -61,7 +62,7 @@ fun WalletScreen(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Current Balance", style = MaterialTheme.typography.titleMedium)
+                Text("Current Balance", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("$${String.format("%.2f", balance)}", style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             }
@@ -69,13 +70,13 @@ fun WalletScreen(
         
         Spacer(modifier = Modifier.height(32.dp))
         
-        Text("Recent Transactions", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text("Recent Transactions", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(16.dp))
         
         var selectedTransaction by remember { mutableStateOf<com.evcharging.app.data.model.Transaction?>(null) }
     
         if (transactions.isEmpty()) {
-            Text("No transactions yet.", color = Color.Gray)
+            Text("No transactions yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             LazyColumn(
                 modifier = Modifier.weight(1f),
@@ -85,7 +86,7 @@ fun WalletScreen(
                     val transaction = transactions[index]
                     val isCredit = transaction.type.name == "REFUND" || transaction.type.name == "TOPUP"
                     val sign = if (isCredit) "+" else "-"
-                    val amountColor = if (isCredit) com.evcharging.app.ui.theme.NeonGreen else com.evcharging.app.ui.theme.NeonRed
+                    val amountColor = if (isCredit) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error // NeonGreen/Red
                     val title = if (isCredit) "Credit Amount" else "Debit Amount"
                     
                     val subtitle = when(transaction.type.name) {
@@ -99,7 +100,7 @@ fun WalletScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { selectedTransaction = transaction },
-                        colors = CardDefaults.cardColors(containerColor = com.evcharging.app.ui.theme.CardBackground)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant) // CardBackground
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp).fillMaxWidth(),
@@ -107,13 +108,13 @@ fun WalletScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = com.evcharging.app.ui.theme.TextPrimary)
-                                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = com.evcharging.app.ui.theme.TextSecondary)
-                                Text(transaction.timestamp.toDate().toString().take(16), style = MaterialTheme.typography.bodySmall, color = com.evcharging.app.ui.theme.TextSecondary)
+                                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(transaction.timestamp.toDate().toString().take(16), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text("$sign$${transaction.amount}", style = MaterialTheme.typography.bodyLarge, color = amountColor, fontWeight = FontWeight.Bold)
-                                Text(if(transaction.status.name == "COMPLETED") "Confirmed" else transaction.status.name, style = MaterialTheme.typography.labelSmall, color = if(transaction.status.name == "COMPLETED") com.evcharging.app.ui.theme.NeonCyan else com.evcharging.app.ui.theme.NeonRed)
+                                Text(if(transaction.status.name == "COMPLETED") "Confirmed" else transaction.status.name, style = MaterialTheme.typography.labelSmall, color = if(transaction.status.name == "COMPLETED") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
                             }
                         }
                     }
@@ -125,7 +126,7 @@ fun WalletScreen(
         if (selectedTransaction != null) {
             AlertDialog(
                 onDismissRequest = { selectedTransaction = null },
-                title = { Text("Transaction Details", color = com.evcharging.app.ui.theme.TextPrimary) },
+                title = { Text("Transaction Details", color = MaterialTheme.colorScheme.onSurface) },
                 text = {
                     Column {
                         DetailRow("Transaction ID", selectedTransaction!!.id)
@@ -142,12 +143,12 @@ fun WalletScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = { selectedTransaction = null }) {
-                        Text("Close", color = com.evcharging.app.ui.theme.NeonCyan)
+                        Text("Close", color = MaterialTheme.colorScheme.primary)
                     }
                 },
-                containerColor = com.evcharging.app.ui.theme.DeepBackground,
-                titleContentColor = com.evcharging.app.ui.theme.TextPrimary,
-                textContentColor = com.evcharging.app.ui.theme.TextSecondary
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.onSurface,
+                textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -159,7 +160,7 @@ fun DetailRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = com.evcharging.app.ui.theme.TextSecondary)
-        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = com.evcharging.app.ui.theme.TextPrimary)
+        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
     }
 }

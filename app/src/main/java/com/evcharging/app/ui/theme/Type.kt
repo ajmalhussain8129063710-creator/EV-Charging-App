@@ -12,47 +12,41 @@ val Typography = Typography(
         fontWeight = FontWeight.Bold,
         fontSize = 57.sp,
         lineHeight = 64.sp,
-        letterSpacing = (-0.25).sp,
-        color = TextPrimary
+        letterSpacing = (-0.25).sp
     ),
     displayMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
         fontSize = 45.sp,
         lineHeight = 52.sp,
-        letterSpacing = 0.sp,
-        color = TextPrimary
+        letterSpacing = 0.sp
     ),
     headlineLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.SemiBold,
         fontSize = 32.sp,
         lineHeight = 40.sp,
-        letterSpacing = 0.sp,
-        color = TextPrimary
+        letterSpacing = 0.sp
     ),
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold, // Bold titles
         fontSize = 22.sp,
         lineHeight = 28.sp,
-        letterSpacing = 0.5.sp, // Sligthly wider
-        color = TextPrimary
+        letterSpacing = 0.5.sp // Sligthly wider
     ),
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
-        letterSpacing = 0.5.sp,
-        color = TextSecondary // Softer body text
+        letterSpacing = 0.5.sp
     ),
     labelLarge = TextStyle( // Button text
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
         fontSize = 14.sp,
         lineHeight = 20.sp,
-        letterSpacing = 0.1.sp,
-        color = DeepBackground // Text on Neon buttons
+        letterSpacing = 0.1.sp
     )
 )
