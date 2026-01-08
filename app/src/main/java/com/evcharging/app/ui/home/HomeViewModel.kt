@@ -119,8 +119,15 @@ class HomeViewModel @Inject constructor(
     private val _selectedCarColor = MutableStateFlow<androidx.compose.ui.graphics.Color>(androidx.compose.ui.graphics.Color.Red)
     val selectedCarColor: StateFlow<androidx.compose.ui.graphics.Color> = _selectedCarColor
 
-    // Using highly reliable CDN model (ToyCar) to ensure loading works
-    private val _car3dModelUrl = MutableStateFlow<String>("https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/ToyCar/glTF-Binary/ToyCar.glb") 
+    // 3D Model Options
+    private val carModels = mapOf(
+        "Sport" to "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/ToyCar/glTF-Binary/ToyCar.glb",
+        "Buggy" to "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Buggy/glTF-Binary/Buggy.glb",
+        "Truck" to "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb"
+    )
+
+    // Using highly reliable CDN model (ToyCar) as default
+    private val _car3dModelUrl = MutableStateFlow<String>(carModels["Sport"]!!) 
     val car3dModelUrl: StateFlow<String> = _car3dModelUrl
 
     fun updateCarColor(color: androidx.compose.ui.graphics.Color) {
@@ -128,11 +135,12 @@ class HomeViewModel @Inject constructor(
     }
 
     fun searchAndSelectCar(modelName: String) {
-        // Mock logic
-        if (modelName.contains("Tesla", ignoreCase = true)) {
-             _car3dModelUrl.value = "https://modelviewer.dev/shared-assets/models/RobotExpressive.glb" // Alternative model
-        } else {
-             _car3dModelUrl.value = "https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+        // Simple keyword matching
+        val query = modelName.lowercase()
+        when {
+            query.contains("sport") || query.contains("car") || query.contains("tesla") -> _car3dModelUrl.value = carModels["Sport"]!!
+            query.contains("buggy") || query.contains("offroad") -> _car3dModelUrl.value = carModels["Buggy"]!!
+            query.contains("truck") || query.contains("van") -> _car3dModelUrl.value = carModels["Truck"]!!
         }
     }
 }

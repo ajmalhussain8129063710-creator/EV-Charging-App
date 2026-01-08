@@ -44,12 +44,25 @@ import com.evcharging.app.ui.theme.NeonRed
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    voiceViewModel: com.evcharging.app.ui.components.VoiceAssistantViewModel = hiltViewModel()
 ) {
     val carModel by viewModel.carModel.collectAsState()
+    val voiceResponse by voiceViewModel.voiceResponse.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.refreshData()
+    }
+    
+    // Handle Voice Navigation Events
+    LaunchedEffect(voiceResponse) {
+        voiceResponse?.let { response ->
+            if (response.startsWith("NAVIGATE_TRIP")) {
+                // Format: NAVIGATE_TRIP:Source:Destination
+                // For now, simpler navigation to Trip Planner
+                navController.navigate("tripplanner")
+            }
+        }
     }
     
     // AI Theme Colors
@@ -64,19 +77,19 @@ fun HomeScreen(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             VoiceAssistantButton { command ->
-                handleVoiceCommand(command, navController)
+                voiceViewModel.processCommand(command)
             }
         }
     ) { innerPadding ->
         // Main Background Gradient
         Box(
             modifier = Modifier
+                .padding(innerPadding)
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(innerPadding)
                     .fillMaxSize()
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -513,24 +526,4 @@ fun ActionButton(
     )
 }
 
-private fun handleVoiceCommand(command: String, navController: NavController) {
-    val lowerCommand = command.lowercase()
-    when {
-        lowerCommand.contains("plan trip to") -> {
-            val destination = command.substringAfter("plan trip to").trim()
-            // In a real app, we'd pass the destination as an argument
-            navController.navigate("tripplanner") 
-        }
-        lowerCommand.contains("trip planner") -> {
-            navController.navigate("tripplanner")
-        }
-        lowerCommand.contains("map") || lowerCommand.contains("navigation") -> {
-            navController.navigate("navigation")
-        }
-        lowerCommand.contains("home") -> {
-            navController.navigate("home") {
-                popUpTo("home") { inclusive = true }
-            }
-        }
-    }
-}
+
