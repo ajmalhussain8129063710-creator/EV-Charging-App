@@ -119,8 +119,8 @@ class HomeViewModel @Inject constructor(
     private val _selectedCarColor = MutableStateFlow<androidx.compose.ui.graphics.Color>(androidx.compose.ui.graphics.Color.Red)
     val selectedCarColor: StateFlow<androidx.compose.ui.graphics.Color> = _selectedCarColor
 
-    // Using highly reliable CDN model (Astronaut) to ensure loading works
-    private val _car3dModelUrl = MutableStateFlow<String>("https://modelviewer.dev/shared-assets/models/Astronaut.glb") 
+    // Using highly reliable CDN model (ToyCar) to ensure loading works
+    private val _car3dModelUrl = MutableStateFlow<String>("https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/ToyCar/glTF-Binary/ToyCar.glb") 
     val car3dModelUrl: StateFlow<String> = _car3dModelUrl
 
     fun updateCarColor(color: androidx.compose.ui.graphics.Color) {

@@ -120,6 +120,7 @@ fun MainApp(
                 val bookingId = backStackEntry.arguments?.getString("bookingId") ?: ""
                 com.evcharging.app.ui.charging.ChargingScreen(navController, bookingId)
             }
+            composable("admin_signup") { com.evcharging.app.ui.admin_signup.AdminSignupScreen(navController) }
         }
     }
 }

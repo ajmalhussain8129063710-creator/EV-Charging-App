@@ -12,26 +12,26 @@ class StationRepository @Inject constructor(
 ) {
 
     private val localStations = listOf(
-        Station("1", "Orchard Central Charger", 1.3007, 103.8397, true, "181 Orchard Rd"),
-        Station("2", "VivoCity EV Point", 1.2642, 103.8223, true, "1 HarbourFront Walk"),
-        Station("3", "Marina Bay Sands Charging", 1.2834, 103.8607, false, "10 Bayfront Ave"),
-        Station("4", "Jurong Point Station", 1.3403, 103.7060, true, "1 Jurong West Central 2"),
-        Station("5", "Changi Airport T3", 1.3554, 103.9864, true, "65 Airport Blvd"),
-        Station("6", "Suntec City Mall", 1.2935, 103.8572, true, "3 Temasek Blvd"),
-        Station("7", "ION Orchard", 1.3040, 103.8319, true, "2 Orchard Turn"),
-        Station("8", "Great World City", 1.2933, 103.8322, true, "1 Kim Seng Promenade"),
-        Station("9", "Plaza Singapura", 1.3010, 103.8454, false, "68 Orchard Rd"),
-        Station("10", "Paragon Shopping Centre", 1.3038, 103.8358, true, "290 Orchard Rd"),
-        Station("11", "Bugis Junction", 1.3005, 103.8560, true, "200 Victoria St"),
-        Station("12", "Raffles City Shopping Centre", 1.2940, 103.8534, true, "252 North Bridge Rd"),
-        Station("13", "The Star Vista", 1.3068, 103.7884, true, "1 Vista Exchange Green"),
-        Station("14", "Westgate", 1.3337, 103.7423, true, "3 Gateway Dr"),
-        Station("15", "JEM", 1.3330, 103.7436, false, "50 Jurong Gateway Rd"),
-        Station("16", "Tampines Mall", 1.3526, 103.9447, true, "4 Tampines Central 5"),
-        Station("17", "Century Square", 1.3516, 103.9442, true, "2 Tampines Central 5"),
-        Station("18", "NEX", 1.3506, 103.8722, true, "23 Serangoon Central"),
-        Station("19", "Waterway Point", 1.4067, 103.9022, true, "83 Punggol Central"),
-        Station("20", "Northpoint City", 1.4295, 103.8362, true, "930 Yishun Ave 2")
+        Station(id = "1", name = "Orchard Central Charger", address = "181 Orchard Rd", latitude = 1.3007, longitude = 103.8397, status = "Available", isAvailable = true),
+        Station(id = "2", name = "VivoCity EV Point", address = "1 HarbourFront Walk", latitude = 1.2642, longitude = 103.8223, status = "Available", isAvailable = true),
+        Station(id = "3", name = "Marina Bay Sands Charging", address = "10 Bayfront Ave", latitude = 1.2834, longitude = 103.8607, status = "Busy", isAvailable = false),
+        Station(id = "4", name = "Jurong Point Station", address = "1 Jurong West Central 2", latitude = 1.3403, longitude = 103.7060, status = "Available", isAvailable = true),
+        Station(id = "5", name = "Changi Airport T3", address = "65 Airport Blvd", latitude = 1.3554, longitude = 103.9864, status = "Available", isAvailable = true),
+        Station(id = "6", name = "Suntec City Mall", address = "3 Temasek Blvd", latitude = 1.2935, longitude = 103.8572, status = "Available", isAvailable = true),
+        Station(id = "7", name = "ION Orchard", address = "2 Orchard Turn", latitude = 1.3040, longitude = 103.8319, status = "Available", isAvailable = true),
+        Station(id = "8", name = "Great World City", address = "1 Kim Seng Promenade", latitude = 1.2933, longitude = 103.8322, status = "Available", isAvailable = true),
+        Station(id = "9", name = "Plaza Singapura", address = "68 Orchard Rd", latitude = 1.3010, longitude = 103.8454, status = "Busy", isAvailable = false),
+        Station(id = "10", name = "Paragon Shopping Centre", address = "290 Orchard Rd", latitude = 1.3038, longitude = 103.8358, status = "Available", isAvailable = true),
+        Station(id = "11", name = "Bugis Junction", address = "200 Victoria St", latitude = 1.3005, longitude = 103.8560, status = "Available", isAvailable = true),
+        Station(id = "12", name = "Raffles City Shopping Centre", address = "252 North Bridge Rd", latitude = 1.2940, longitude = 103.8534, status = "Available", isAvailable = true),
+        Station(id = "13", name = "The Star Vista", address = "1 Vista Exchange Green", latitude = 1.3068, longitude = 103.7884, status = "Available", isAvailable = true),
+        Station(id = "14", name = "Westgate", address = "3 Gateway Dr", latitude = 1.3337, longitude = 103.7423, status = "Available", isAvailable = true),
+        Station(id = "15", name = "JEM", address = "50 Jurong Gateway Rd", latitude = 1.3330, longitude = 103.7436, status = "Busy", isAvailable = false),
+        Station(id = "16", name = "Tampines Mall", address = "4 Tampines Central 5", latitude = 1.3526, longitude = 103.9447, status = "Available", isAvailable = true),
+        Station(id = "17", name = "Century Square", address = "2 Tampines Central 5", latitude = 1.3516, longitude = 103.9442, status = "Available", isAvailable = true),
+        Station(id = "18", name = "NEX", address = "23 Serangoon Central", latitude = 1.3506, longitude = 103.8722, status = "Available", isAvailable = true),
+        Station(id = "19", name = "Waterway Point", address = "83 Punggol Central", latitude = 1.4067, longitude = 103.9022, status = "Available", isAvailable = true),
+        Station(id = "20", name = "Northpoint City", address = "930 Yishun Ave 2", latitude = 1.4295, longitude = 103.8362, status = "Available", isAvailable = true)
     )
 
     suspend fun getStations(): Result<List<Station>> {

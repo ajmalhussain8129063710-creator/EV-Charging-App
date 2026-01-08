@@ -380,6 +380,39 @@ fun HomeScreen(
                     )
                 }
             }
+            
+            // Partner/Admin Signup Button - Right Center
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 0.dp) // Stick to edge
+            ) {
+                Surface(
+                    onClick = { navController.navigate("admin_signup") },
+                    shape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    tonalElevation = 8.dp,
+                    shadowElevation = 8.dp
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.BatteryChargingFull, 
+                            contentDescription = "Host Station",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Host",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     }
 
