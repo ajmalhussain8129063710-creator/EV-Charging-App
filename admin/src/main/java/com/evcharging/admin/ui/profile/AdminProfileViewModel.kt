@@ -36,6 +36,9 @@ class AdminProfileViewModel @Inject constructor(
     private val _stationVideoUrl = MutableStateFlow("")
     val stationVideoUrl: StateFlow<String> = _stationVideoUrl.asStateFlow()
 
+    private val _chargerType = MutableStateFlow("Normal Charger")
+    val chargerType: StateFlow<String> = _chargerType.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     
@@ -62,16 +65,16 @@ class AdminProfileViewModel @Inject constructor(
     fun clearSuggestions() {
         _locationSuggestions.value = emptyList()
     }
+    
+    fun setChargerType(type: String) {
+        _chargerType.value = type
+    }
 
     private fun fetchProfile() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val userId = auth.currentUser?.uid ?: return@launch
-                // Assuming admin data is in 'admins' collection or 'users'
-                // Based on previous context, let's assume 'users' or a specific 'stations' collection linked to admin
-                // For this implementation, I'll assume the admin manages a station stored in 'stations' where 'adminId' == userId
-                // OR the admin document itself contains station info.
                 
                 // Let's try to find the station managed by this admin
                 val stationSnapshot = firestore.collection("stations")
@@ -86,6 +89,7 @@ class AdminProfileViewModel @Inject constructor(
                     _stationAddress.value = station.getString("address") ?: ""
                     _stationImageUrl.value = station.getString("imageUrl") ?: ""
                     _stationVideoUrl.value = station.getString("videoUrl") ?: ""
+                    _chargerType.value = station.getString("chargerType") ?: "Normal Charger"
                 }
                 
                 // Also get admin name
@@ -103,7 +107,7 @@ class AdminProfileViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    fun updateProfile(name: String, address: String, imageUri: android.net.Uri?, videoUri: android.net.Uri?, currentImageUrl: String, currentVideoUrl: String) {
+    fun updateProfile(name: String, address: String, imageUri: android.net.Uri?, videoUri: android.net.Uri?, currentImageUrl: String, currentVideoUrl: String, chargerType: String) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -139,13 +143,15 @@ class AdminProfileViewModel @Inject constructor(
                         mapOf(
                             "address" to address,
                             "imageUrl" to finalImageUrl,
-                            "videoUrl" to finalVideoUrl
+                            "videoUrl" to finalVideoUrl,
+                            "chargerType" to chargerType
                         )
                     ).await()
                     
                     _stationAddress.value = address
                     _stationImageUrl.value = finalImageUrl
                     _stationVideoUrl.value = finalVideoUrl
+                    _chargerType.value = chargerType
                 }
                 
                 _updateSuccess.value = true

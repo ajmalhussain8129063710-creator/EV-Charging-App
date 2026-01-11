@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.evcharging.app.data.PlacesRepository
 import com.evcharging.app.data.PlacePrediction
 import com.evcharging.app.data.StationRepository
+import com.evcharging.app.data.DirectionsRepository
 import com.evcharging.app.data.model.Station
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,8 @@ import androidx.compose.material.icons.filled.PedalBike
 @HiltViewModel
 class NavigationViewModel @Inject constructor(
     private val repository: StationRepository,
-    private val placesRepository: PlacesRepository
+    private val placesRepository: PlacesRepository,
+    private val directionsRepository: DirectionsRepository
 ) : ViewModel() {
 
     private val _stations = MutableStateFlow<List<Station>>(emptyList())
@@ -71,7 +73,7 @@ class NavigationViewModel @Inject constructor(
         var filtered = allStations
         
         _filterType.value?.let { type ->
-            filtered = filtered.filter { it.chargerType.contains(type, ignoreCase = true) }
+            filtered = filtered.filter { it.chargerType?.contains(type, ignoreCase = true) == true }
         }
         
         _filterStatus.value?.let { status ->
@@ -169,16 +171,14 @@ class NavigationViewModel @Inject constructor(
 
     fun calculateRoute(start: com.google.android.gms.maps.model.LatLng, end: com.google.android.gms.maps.model.LatLng) {
         viewModelScope.launch {
-             // Mock Route Calculation
-            val distanceKm = calculateDistance(start.latitude, start.longitude, end.latitude, end.longitude)
+            // Fetch real route from Google Directions API
+            val apiKey = "AIzaSyCuSXXGnpz5AP4XQZOl_udZIyiRUs1KGDs" // Using key from Manifest
+            val points = directionsRepository.getRoute(start, end, apiKey)
             
-            // Speed assumption: Car ~ 50km/h, Bike ~ 20km/h
+            val distanceKm = calculateDistance(start.latitude, start.longitude, end.latitude, end.longitude)
             val speedKmH = if (_selectedMode.value == TransportMode.CAR) 50 else 20
             val durationMins = ((distanceKm / speedKmH) * 60).toInt()
-            
-            // Calculate route geometry
-            val points = simulateRoutePath(start, end)
-            
+
             _route.value = RouteInfo(
                 distance = "${String.format("%.1f", distanceKm)} km",
                 duration = "$durationMins mins",
@@ -188,7 +188,7 @@ class NavigationViewModel @Inject constructor(
             // Focus on Midpoint
             val midLat = (start.latitude + end.latitude) / 2
             val midLng = (start.longitude + end.longitude) / 2
-             _cameraUpdate.value = com.google.android.gms.maps.model.LatLng(midLat, midLng)
+            _cameraUpdate.value = com.google.android.gms.maps.model.LatLng(midLat, midLng)
         }
     }
 
@@ -199,31 +199,8 @@ class NavigationViewModel @Inject constructor(
             _cameraUpdate.value = latLng // Initial center
         }
     }
-
-    private fun simulateRoutePath(start: com.google.android.gms.maps.model.LatLng, end: com.google.android.gms.maps.model.LatLng): List<com.google.android.gms.maps.model.LatLng> {
-         // Create a more complex "jagged" path to simulate city streets
-         val points = mutableListOf<com.google.android.gms.maps.model.LatLng>()
-         points.add(start)
-         
-         val latDiff = end.latitude - start.latitude
-         val lngDiff = end.longitude - start.longitude
-         
-         // Add 5 intermediate points with some "noise" to look like turns
-         for (i in 1..5) {
-             val fraction = i / 6.0
-             val baseLat = start.latitude + latDiff * fraction
-             val baseLng = start.longitude + lngDiff * fraction
-             
-             // Add "turn" offset (alternating)
-             val offset = if (i % 2 == 0) 0.002 else -0.002
-             
-             points.add(com.google.android.gms.maps.model.LatLng(baseLat + offset, baseLng + offset))
-             points.add(com.google.android.gms.maps.model.LatLng(baseLat, baseLng)) // Return to "main road" line
-         }
-
-         points.add(end)
-         return points
-    }
+    
+    // Removed simulateRoutePath as it's replaced by real API call
     
     private val _isNavigationActive = MutableStateFlow(false)
     val isNavigationActive: StateFlow<Boolean> = _isNavigationActive

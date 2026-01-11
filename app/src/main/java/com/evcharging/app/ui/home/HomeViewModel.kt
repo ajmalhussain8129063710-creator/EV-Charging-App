@@ -88,13 +88,26 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private val _isFastChargerFilterEnabled = MutableStateFlow(false)
+    val isFastChargerFilterEnabled: StateFlow<Boolean> = _isFastChargerFilterEnabled
+
+    fun toggleFastChargerFilter() {
+        _isFastChargerFilterEnabled.value = !_isFastChargerFilterEnabled.value
+        fetchNearbyStations()
+    }
+
     private fun fetchNearbyStations() {
         viewModelScope.launch {
             // Mock user location for now (e.g., Nagpur - India Center)
             val userLat = 21.1458
             val userLng = 79.0882
             
-            val result = stationRepository.getStationsNear(userLat, userLng, 5.0)
+            val isFastFilter = _isFastChargerFilterEnabled.value
+            // If filtering by Fast Charger, use 20km radius, else default 5km
+            val radius = if (isFastFilter) 20.0 else 5.0
+            val type = if (isFastFilter) "Fast Charger" else null
+
+            val result = stationRepository.getStationsNear(userLat, userLng, radius, type)
             if (result.isSuccess) {
                 _nearbyStations.value = result.getOrDefault(emptyList())
             }

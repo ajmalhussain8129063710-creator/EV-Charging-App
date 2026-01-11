@@ -12,40 +12,42 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.graphics.Color
 
-// Elite AI Dark Scheme
-private val EliteColorScheme = darkColorScheme(
-    primary = NeonCyan,
-    onPrimary = DeepBackground,
-    primaryContainer = NeonBlue,
-    onPrimaryContainer = TextPrimary,
-    secondary = NeonPurple,
-    onSecondary = TextPrimary,
-    tertiary = NeonGreen,
-    background = DeepBackground,
-    onBackground = TextPrimary,
-    surface = SurfaceBlack, // Or use Glass in components
-    onSurface = TextPrimary,
-    error = NeonRed,
-    onError = TextPrimary
+// Elite Deep Space (Dark Mode)
+private val DeepSpaceScheme = darkColorScheme(
+    primary = ElectricCyan,
+    onPrimary = DeepSpaceBlack,
+    primaryContainer = ElectricBlue,
+    onPrimaryContainer = Color.White,
+    secondary = ElectricPurple,
+    onSecondary = Color.White,
+    tertiary = VividGreen,
+    background = DeepSpaceBlack,
+    onBackground = Color.White,
+    surface = DeepSurface,
+    onSurface = Color.White,
+    surfaceVariant = DarkGlass, // For Glass Cards
+    onSurfaceVariant = Color.White.copy(alpha = 0.7f),
+    error = VividOrange,
+    outline = ElectricCyan.copy(alpha = 0.5f)
 )
 
-// Elite AI Light Scheme
-private val LightColorScheme = androidx.compose.material3.lightColorScheme(
-    primary = FriendlyPrimary,
+// Bright Future (Light Mode) - High Energy & Clean
+private val BrightFutureScheme = androidx.compose.material3.lightColorScheme(
+    primary = ElectricBlue,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFE0F7FA), // Light Blue Container
-    onPrimaryContainer = FriendlyTextPrimary,
-    secondary = FriendlySecondary,
+    primaryContainer = ElectricCyan.copy(alpha = 0.2f),
+    onPrimaryContainer = InkBlack,
+    secondary = ElectricPurple,
     onSecondary = Color.White,
-    tertiary = NeonGreen, // Keep Neon for status like "Active"
-    background = LightBackground,
-    onBackground = FriendlyTextPrimary,
-    surface = LightSurface,
-    onSurface = FriendlyTextPrimary,
-    surfaceVariant = LightGlassSurface, // Mapping Glass Surface here for reusability if needed
-    onSurfaceVariant = FriendlyTextSecondary,
-    error = NeonRed,
-    onError = Color.White
+    tertiary = VividGreen,
+    background = BrightBackground,
+    onBackground = InkBlack,
+    surface = BrightSurface,
+    onSurface = InkBlack,
+    surfaceVariant = BrightSurfaceVariant,
+    onSurfaceVariant = InkGrey,
+    error = VividOrange,
+    outline = GlassBorderLight
 )
 
 @Composable
@@ -54,7 +56,7 @@ fun EVChargingAppTheme(
     dynamicColor: Boolean = false, // Disable dynamic color
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) EliteColorScheme else LightColorScheme
+    val colorScheme = if (darkTheme) DeepSpaceScheme else BrightFutureScheme
 
     val view = LocalView.current
     if (!view.isInEditMode) {

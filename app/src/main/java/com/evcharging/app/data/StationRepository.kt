@@ -5,6 +5,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Singleton
 class StationRepository @Inject constructor(
@@ -12,7 +14,7 @@ class StationRepository @Inject constructor(
 ) {
 
     private val localStations = listOf(
-        Station(id = "1", name = "Orchard Central Charger", address = "181 Orchard Rd", latitude = 1.3007, longitude = 103.8397, status = "Available", isAvailable = true),
+        Station(id = "1", name = "Orchard Central Charger", address = "181 Orchard Rd", latitude = 1.3007, longitude = 103.8397, status = "Available", isAvailable = true, chargerType = "DC Fast, AC Type 2"),
         Station(id = "2", name = "VivoCity EV Point", address = "1 HarbourFront Walk", latitude = 1.2642, longitude = 103.8223, status = "Available", isAvailable = true),
         Station(id = "3", name = "Marina Bay Sands Charging", address = "10 Bayfront Ave", latitude = 1.2834, longitude = 103.8607, status = "Busy", isAvailable = false),
         Station(id = "4", name = "Jurong Point Station", address = "1 Jurong West Central 2", latitude = 1.3403, longitude = 103.7060, status = "Available", isAvailable = true),
@@ -34,10 +36,15 @@ class StationRepository @Inject constructor(
         Station(id = "20", name = "Northpoint City", address = "930 Yishun Ave 2", latitude = 1.4295, longitude = 103.8362, status = "Available", isAvailable = true)
     )
 
-    suspend fun getStations(): Result<List<Station>> {
-        return try {
+    suspend fun getStations(): Result<List<Station>> = withContext(Dispatchers.IO) {
+        try {
             val snapshot = firestore.collection("stations").get().await()
-            val stations = snapshot.toObjects(Station::class.java)
+            val stations = try {
+                snapshot.toObjects(Station::class.java)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
             if (stations.isEmpty()) {
                 try { seedStations() } catch (e: Exception) { e.printStackTrace() }
                 Result.success(localStations)
@@ -52,7 +59,12 @@ class StationRepository @Inject constructor(
 
     private suspend fun seedStations() {
         localStations.forEach { station ->
-            firestore.collection("stations").document(station.id).set(station).await()
+            try {
+                firestore.collection("stations").document(station.id).set(station).await()
+            } catch (e: Exception) {
+                // Squelch errors during seeding to prevent crash
+                e.printStackTrace()
+            }
         }
     }
 
@@ -75,16 +87,17 @@ class StationRepository @Inject constructor(
         startLon: Double,
         endLat: Double,
         endLon: Double,
-        bufferKm: Double = 5.0 // Reduced buffer to 5km for stricter route filtering
+        bufferKm: Double = 5.0
     ): List<Station> {
+        // This is CPU bound, if list is huge, consider moving to Default dispatcher
+        // But caller will typically be in suspend function.
         return stations.filter { station ->
-            val dist = distanceFromLineSegment(
+            distanceFromLineSegment(
                 station.latitude, station.longitude,
                 startLat, startLon,
                 endLat, endLon,
                 bufferKm
             )
-            dist
         }
     }
 
@@ -94,27 +107,37 @@ class StationRepository @Inject constructor(
         endLat: Double, endLon: Double,
         bufferKm: Double
     ): Boolean {
-        // Simple "is between" check:
-        // Distance(Start, Station) + Distance(Station, End) approx equals Distance(Start, End)
-        
         val distStartToStation = calculateDistance(startLat, startLon, lat, lon)
         val distStationToEnd = calculateDistance(lat, lon, endLat, endLon)
         val distStartToEnd = calculateDistance(startLat, startLon, endLat, endLon)
         
-        // If the station is "along the way", the sum of distances should be close to the total distance.
-        // Allow for a detour factor (e.g., bufferKm)
         return (distStartToStation + distStationToEnd) <= (distStartToEnd + bufferKm)
     }
 
-    suspend fun getStationsNear(lat: Double, lng: Double, radiusKm: Double = 5.0): Result<List<Station>> {
-        return try {
+    suspend fun getStationsNear(lat: Double, lng: Double, radiusKm: Double = 5.0, chargerType: String? = null): Result<List<Station>> = withContext(Dispatchers.IO) {
+        try {
             // Fetch all stations and filter locally (for simplicity without geospatial query)
-            // In a real app with many stations, use GeoHash or GeoFire
             val snapshot = firestore.collection("stations").get().await()
-            val allStations = snapshot.toObjects(Station::class.java)
+            val allStations = try {
+                snapshot.toObjects(Station::class.java)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
             
             val nearbyStations = allStations.filter { station ->
-                calculateDistance(lat, lng, station.latitude, station.longitude) <= radiusKm
+                val distance = calculateDistance(lat, lng, station.latitude, station.longitude)
+                val withinRadius = distance <= radiusKm
+                
+                val typeMatch = if (chargerType != null) {
+                    // Check if station's chargerType contains the requested type (e.g. "Fast" in "Fast Charger, DC")
+                    // Safety: Access nullable field directly
+                    station.chargerType?.contains(chargerType, ignoreCase = true) == true
+                } else {
+                    true
+                }
+
+                withinRadius && typeMatch
             }
             
             Result.success(nearbyStations)
@@ -123,8 +146,8 @@ class StationRepository @Inject constructor(
         }
     }
 
-    suspend fun getStationDining(stationId: String): Result<List<com.evcharging.app.data.model.Dining>> {
-        return try {
+    suspend fun getStationDining(stationId: String): Result<List<com.evcharging.app.data.model.Dining>> = withContext(Dispatchers.IO) {
+        try {
             val snapshot = firestore.collection("stations").document(stationId)
                 .collection("dining").get().await()
             val diningList = snapshot.toObjects(com.evcharging.app.data.model.Dining::class.java)

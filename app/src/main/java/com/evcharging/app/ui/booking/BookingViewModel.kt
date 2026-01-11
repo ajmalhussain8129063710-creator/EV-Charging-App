@@ -62,16 +62,20 @@ class BookingViewModel @Inject constructor(
         paymentMethod: String,
         date: Long
     ) {
+        createBookingInternal(stationName, amount, paymentMethod, date, null)
+    }
+
+    private fun createBookingInternal(
+        stationName: String, 
+        amount: Double, 
+        paymentMethod: String, 
+        date: Long,
+        transactionId: String?
+    ) {
         viewModelScope.launch {
             _bookingState.value = BookingState.Loading
-            val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
-            if (userId == null) {
-                _bookingState.value = BookingState.Error("User not logged in")
-                return@launch
-            }
-
-            // 1. Create Booking (Handles Wallet Deduction and Transaction Creation internally)
             val bookingResult = bookingRepository.createBooking(stationName, amount.toString(), paymentMethod, date)
+            
             if (bookingResult.isFailure) {
                 _bookingState.value = BookingState.Error("Booking failed: ${bookingResult.exceptionOrNull()?.message}")
                 return@launch
@@ -79,7 +83,6 @@ class BookingViewModel @Inject constructor(
             val bookingId = bookingResult.getOrNull() ?: ""
             currentBookingId = bookingId
 
-            // Optimistic Wallet Update if Wallet was used (Optional, or re-fetch)
             if (paymentMethod == "Wallet") {
                  _walletBalance.value -= amount
             }
@@ -90,6 +93,7 @@ class BookingViewModel @Inject constructor(
     
     var currentBookingId: String = ""
         private set
+
     fun startCharging(bookingId: String) {
         viewModelScope.launch {
             _bookingState.value = BookingState.Loading

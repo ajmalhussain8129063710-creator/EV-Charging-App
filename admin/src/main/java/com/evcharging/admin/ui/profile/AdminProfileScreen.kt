@@ -185,6 +185,27 @@ fun AdminProfileScreen(
                     Text(if (selectedVideoUri != null) "Change Video" else "Select Video")
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Charger Type", style = MaterialTheme.typography.titleMedium)
+                val chargerType by viewModel.chargerType.collectAsState()
+                
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = chargerType == "Normal Charger",
+                        onClick = { viewModel.setChargerType("Normal Charger") }
+                    )
+                    Text("Normal Charger", modifier = Modifier.padding(start = 8.dp))
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
+                    RadioButton(
+                        selected = chargerType == "Fast Charger",
+                        onClick = { viewModel.setChargerType("Fast Charger") }
+                    )
+                    Text("Fast Charger", modifier = Modifier.padding(start = 8.dp))
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
@@ -195,7 +216,8 @@ fun AdminProfileScreen(
                             imageUri = selectedImageUri,
                             videoUri = selectedVideoUri,
                             currentImageUrl = imageInput,
-                            currentVideoUrl = videoInput
+                            currentVideoUrl = videoInput,
+                            chargerType = chargerType
                         )
                     },
                     modifier = Modifier.fillMaxWidth().height(50.dp)

@@ -148,7 +148,7 @@ fun PromotionsScreen(
                             Column {
                                 Text(text = item.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                                 Text(text = "${item.pointsCost} Points", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.tertiary)
-                                Text(text = "Value: $${item.value}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                                Text(text = "Value: ₹${item.value}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                             }
                         }
                     }
@@ -204,7 +204,7 @@ fun AddRewardDialog(onDismiss: () -> Unit, onAdd: (String, String, Int, Double) 
                 OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") })
                 OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text("Description") })
                 OutlinedTextField(value = cost, onValueChange = { cost = it }, label = { Text("Points Cost") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(value = value, onValueChange = { value = it }, label = { Text("Value ($)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                OutlinedTextField(value = value, onValueChange = { value = it }, label = { Text("Value (₹)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
             }
         },
         confirmButton = {

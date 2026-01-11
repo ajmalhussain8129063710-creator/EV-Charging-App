@@ -20,7 +20,7 @@ data class Station(
     // Compatibility fields
     val maintenanceStatus: String = "Operational",
     val isAvailable: Boolean = true,
-    val chargerType: String = "DC Fast, AC Type 2", // Default for filtering
+    val chargerType: String? = "DC Fast, AC Type 2", // Default for filtering
     val promotions: List<Map<String, Any>> = emptyList(),
     val rewards: List<Map<String, Any>> = emptyList(),
     val dining: List<Map<String, Any>> = emptyList()

@@ -27,11 +27,13 @@ import com.evcharging.app.ui.theme.EVChargingAppTheme
 import com.evcharging.app.ui.tripplanner.TripPlannerScreen
 import com.evcharging.app.ui.support.UserSupportScreen
 import com.evcharging.app.ui.profile.ProfileScreen
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), com.razorpay.PaymentResultListener {
 
     @Inject
     lateinit var themeRepository: ThemeRepository
@@ -39,8 +41,36 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var authRepository: AuthRepository
 
+    @Inject
+    lateinit var paymentResultManager: com.evcharging.app.data.PaymentResultManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // CRASH DEBUGGING: Capture stack trace to file
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val file = java.io.File(filesDir, "crash_log.txt")
+                val writer = java.io.PrintWriter(file)
+                throwable.printStackTrace(writer)
+                writer.flush()
+                writer.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            // Re-throw or exit to let standard crash handling proceed (or just kill process)
+            System.exit(1)
+        }
+
+        // Preload Razorpay to reduce lag (move to background to prevent main thread freeze)
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                com.razorpay.Checkout.preload(applicationContext)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        
         setContent {
             // Observe Theme from Repository
             val isDarkTheme by themeRepository.isDarkTheme.collectAsState(initial = true)
@@ -48,6 +78,20 @@ class MainActivity : ComponentActivity() {
             EVChargingAppTheme(darkTheme = isDarkTheme) {
                 MainApp(authRepository, isDarkTheme)
             }
+        }
+    }
+
+    override fun onPaymentSuccess(razorpayPaymentId: String?) {
+        if (razorpayPaymentId != null) {
+            lifecycleScope.launch {
+                paymentResultManager.onPaymentSuccess(razorpayPaymentId)
+            }
+        }
+    }
+
+    override fun onPaymentError(code: Int, response: String?) {
+        lifecycleScope.launch {
+            paymentResultManager.onPaymentError(code, response ?: "Payment Failed")
         }
     }
 }
@@ -120,6 +164,7 @@ fun MainApp(
                 val bookingId = backStackEntry.arguments?.getString("bookingId") ?: ""
                 com.evcharging.app.ui.charging.ChargingScreen(navController, bookingId)
             }
+            composable("scan_qr") { com.evcharging.app.ui.scan.ScanQRScreen(navController) }
             composable("admin_signup") { com.evcharging.app.ui.admin_signup.AdminSignupScreen(navController) }
         }
     }

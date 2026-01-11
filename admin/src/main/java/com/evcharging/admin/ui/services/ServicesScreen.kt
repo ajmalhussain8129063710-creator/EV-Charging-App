@@ -95,7 +95,7 @@ fun ServiceItemCard(service: ServiceItem) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "$${service.price}",
+                    text = "₹${service.price}",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -139,7 +139,7 @@ fun AddServiceDialog(
                 OutlinedTextField(
                     value = price,
                     onValueChange = { price = it },
-                    label = { Text("Price ($)") },
+                    label = { Text("Price (₹)") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
                 )

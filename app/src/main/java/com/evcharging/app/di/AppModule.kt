@@ -38,6 +38,16 @@ object AppModule {
                  e.printStackTrace()
              }
         }
+        
+        // Fallback: If still not initialized, try hardcoded key (mirrors EVChargingApp)
+        if (!com.google.android.libraries.places.api.Places.isInitialized()) {
+            try {
+                com.google.android.libraries.places.api.Places.initialize(context, "AIzaSyCuSXXGnpz5AP4XQZOl_udZIyiRUs1KGDs")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         return com.google.android.libraries.places.api.Places.createClient(context)
     }
 }

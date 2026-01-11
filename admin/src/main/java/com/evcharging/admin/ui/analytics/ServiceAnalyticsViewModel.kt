@@ -107,7 +107,7 @@ class ServiceAnalyticsViewModel @Inject constructor(
             
             _revenueChartData.value = listOf(
                 AnalyticsDataPoint("Total Requests", count),
-                AnalyticsDataPoint("Total Revenue ($)", revenue)
+                AnalyticsDataPoint("Total Revenue (₹)", revenue)
             )
         }
     }

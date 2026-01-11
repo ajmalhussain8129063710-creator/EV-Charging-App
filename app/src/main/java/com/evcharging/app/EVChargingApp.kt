@@ -11,7 +11,11 @@ class EVChargingApp : Application() {
         super.onCreate()
         // Initialize the SDK
         if (!Places.isInitialized()) {
-            Places.initialize(applicationContext, "AIzaSyCuSXXGnpz5AP4XQZOl_udZIyiRUs1KGDs")
+            try {
+                Places.initialize(applicationContext, "AIzaSyCuSXXGnpz5AP4XQZOl_udZIyiRUs1KGDs")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }

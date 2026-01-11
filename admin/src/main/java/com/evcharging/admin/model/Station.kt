@@ -15,5 +15,6 @@ data class Station(
     val status: String = "Available", // Available, Busy, Offline
     val adminId: String = "",
     val pointsPerKw: Double = 0.001, // Default earning rate
-    val type: String = "Charging Station"
+    val type: String = "Charging Station",
+    val chargerType: String = "Normal Charger" // "Fast Charger" or "Normal Charger"
 )

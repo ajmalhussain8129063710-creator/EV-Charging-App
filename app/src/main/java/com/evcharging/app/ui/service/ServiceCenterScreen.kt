@@ -90,7 +90,7 @@ fun ServiceCenterScreen(
                                         Text(service.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                                         Text(service.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
                                     }
-                                    Text("$${service.price}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    Text("₹${service.price}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                 }
                             }
                         }
@@ -108,7 +108,7 @@ fun ServiceCenterScreen(
             text = { 
                 Column {
                     Text("Service: ${selectedService?.name}")
-                    Text("Price: $${selectedService?.price}")
+                    Text("Price: ₹${selectedService?.price}")
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Proceed to payment?")
                 }

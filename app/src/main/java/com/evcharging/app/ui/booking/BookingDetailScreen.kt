@@ -35,6 +35,7 @@ import androidx.navigation.NavController
 import com.evcharging.app.ui.components.GlassCard
 import com.evcharging.app.ui.components.NeonButton
 import com.evcharging.app.ui.components.SectionHeader
+import androidx.compose.ui.platform.LocalContext
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -47,16 +48,20 @@ fun BookingDetailScreen(
     navController: NavController,
     stationName: String,
     stationAddress: String = "123 EV Street, Green City",
-    pricePerKwh: String = "$0.25/kWh",
+    pricePerKwh: String = "₹0.25/kWh",
     stationId: String = "",
     viewModel: BookingViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     var selectedSlot by remember { mutableStateOf<String?>(null) }
+    var selectedHours by remember { mutableStateOf(1) }
+    var selectedMinutes by remember { mutableStateOf(0) }
     var paymentMethod by remember { mutableStateOf("Card") }
     var selectedDate by remember { mutableStateOf<Long?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showCancelDialog by remember { mutableStateOf(false) }
     
+    var showLowBalanceDialog by remember { mutableStateOf(false) }
+
     val walletBalance by viewModel.walletBalance.collectAsState()
     val bookingState by viewModel.bookingState.collectAsState()
     val diningList by viewModel.diningList.collectAsState()
@@ -64,11 +69,36 @@ fun BookingDetailScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val basePrice = pricePerKwh.replace("$", "").replace("/kWh", "").toDoubleOrNull() ?: 0.25
-    val estimatedKwh = 20.0
-    val subtotal = basePrice * estimatedKwh
-    val discount = if (paymentMethod == "Wallet") subtotal * 0.10 else 0.0
+    // Pricing: ₹200 per 60 Mins (approx ₹3.33/min)
+    val totalMinutes = (selectedHours * 60) + selectedMinutes
+    val pricePerMinute = 200.0 / 60.0
+    val subtotal = totalMinutes * pricePerMinute
+    val discount = 0.0 
     val total = subtotal - discount
+
+    if (showLowBalanceDialog) {
+        AlertDialog(
+            onDismissRequest = { showLowBalanceDialog = false },
+            title = { Text("Insufficient Balance", color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("You need ₹${String.format("%.2f", total)} but have ₹${String.format("%.2f", walletBalance)}. Please add money to your wallet.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            confirmButton = {
+                NeonButton(
+                    text = "Go to Wallet",
+                    onClick = {
+                        showLowBalanceDialog = false
+                        navController.navigate("wallet")
+                    },
+                    color = MaterialTheme.colorScheme.primary
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = { showLowBalanceDialog = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
 
     LaunchedEffect(stationId) {
         viewModel.fetchDining(stationId)
@@ -100,7 +130,25 @@ fun BookingDetailScreen(
 
     // Modern Date Picker Dialog (Auto-select)
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate)
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    // Allow dates from today onwards
+                    val today = Calendar.getInstance().apply {
+                         set(Calendar.HOUR_OF_DAY, 0)
+                         set(Calendar.MINUTE, 0)
+                         set(Calendar.SECOND, 0)
+                         set(Calendar.MILLISECOND, 0)
+                    }.timeInMillis
+                    return utcTimeMillis >= today
+                }
+
+                override fun isSelectableYear(year: Int): Boolean {
+                    return year >= Calendar.getInstance().get(Calendar.YEAR)
+                }
+            }
+        )
         
         // Auto-confirm when date is selected (only if it changes)
         LaunchedEffect(datePickerState.selectedDateMillis) {
@@ -304,31 +352,140 @@ fun BookingDetailScreen(
                          
                          Divider(color = MaterialTheme.colorScheme.outlineVariant)
                          
-                         // Time Slots
+                         // Time Slots Logic
+                         val allSlots = listOf("09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM")
+                         val availableSlots = remember(selectedDate) {
+                             if (selectedDate == null) {
+                                 allSlots
+                             } else {
+                                 val now = Calendar.getInstance()
+                                 val selectedCal = Calendar.getInstance().apply { timeInMillis = selectedDate!! }
+                                 
+                                 val isToday = now.get(Calendar.YEAR) == selectedCal.get(Calendar.YEAR) &&
+                                               now.get(Calendar.DAY_OF_YEAR) == selectedCal.get(Calendar.DAY_OF_YEAR)
+                                 
+                                 if (isToday) {
+                                     allSlots.filter { slot ->
+                                         try {
+                                             val slotFormat = java.text.SimpleDateFormat("hh:00 a", Locale.getDefault())
+                                             val slotDate = slotFormat.parse(slot)
+                                             val slotCal = Calendar.getInstance().apply {
+                                                 time = slotDate!!
+                                                 set(Calendar.YEAR, now.get(Calendar.YEAR))
+                                                 set(Calendar.MONTH, now.get(Calendar.MONTH))
+                                                 set(Calendar.DAY_OF_MONTH, now.get(Calendar.DAY_OF_MONTH))
+                                             }
+                                             slotCal.after(now)
+                                         } catch (e: Exception) {
+                                             true
+                                         }
+                                     }
+                                 } else {
+                                     allSlots
+                                 }
+                             }
+                         }
+
                          Text("Select Time Slot", color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(vertical = 8.dp))
-                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                             val slots = listOf("09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM")
-                             items(slots) { slot ->
-                                 val isSelected = selectedSlot == slot
-                                 Box(
-                                     modifier = Modifier
-                                         .clip(RoundedCornerShape(8.dp))
-                                         .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                                         .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
-                                         .clickable { selectedSlot = slot }
-                                         .padding(horizontal = 16.dp, vertical = 8.dp)
-                                 ) {
-                                     Text(
-                                         text = slot, 
-                                         color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground,
-                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                     )
+                         
+                         if (selectedDate != null && availableSlots.isEmpty()) {
+                             Text("No slots available for this date.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(bottom = 8.dp))
+                         } else {
+                             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                 items(availableSlots) { slot ->
+                                     val isSelected = selectedSlot == slot
+                                     Box(
+                                         modifier = Modifier
+                                             .clip(RoundedCornerShape(8.dp))
+                                             .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                             .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
+                                             .clickable { selectedSlot = slot }
+                                             .padding(horizontal = 16.dp, vertical = 8.dp)
+                                     ) {
+                                         Text(
+                                             text = slot, 
+                                             color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground,
+                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                         )
+                                     }
                                  }
                              }
                          }
                      }
                 }
                 
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Duration Selection
+                SectionHeader("Select Duration")
+                GlassCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        // Hours Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Hours", color = MaterialTheme.colorScheme.onBackground)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = { if (selectedHours > 0) selectedHours-- }, // Allow 0 hours if minutes > 0
+                                    modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                ) {
+                                    Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = MaterialTheme.colorScheme.onSurface)
+                                }
+                                
+                                Text(
+                                    text = "$selectedHours Hr",
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                
+                                IconButton(
+                                    onClick = { if (selectedHours < 12) selectedHours++ },
+                                    modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = "Increase", tint = MaterialTheme.colorScheme.onSurface)
+                                }
+                            }
+                        }
+
+                        // Minutes Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Minutes", color = MaterialTheme.colorScheme.onBackground)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = { if (selectedMinutes > 0) selectedMinutes -= 15 },
+                                    modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                ) {
+                                    Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = MaterialTheme.colorScheme.onSurface)
+                                }
+                                
+                                Text(
+                                    text = "$selectedMinutes Min",
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                
+                                IconButton(
+                                    onClick = { if (selectedMinutes < 45) selectedMinutes += 15 },
+                                    modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = "Increase", tint = MaterialTheme.colorScheme.onSurface)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 // Dining Options
@@ -341,7 +498,7 @@ fun BookingDetailScreen(
                                     Text(item.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                                     Text(item.description, style = MaterialTheme.typography.bodySmall, maxLines = 2, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text("$${item.price}", color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
+                                    Text("₹${item.price}", color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -352,27 +509,22 @@ fun BookingDetailScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                // Payment Method
-                SectionHeader("Payment Method")
+                // Payment Method Info
+                SectionHeader("Payment")
                 GlassCard {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { paymentMethod = "Wallet" }) {
-                            RadioButton(selected = paymentMethod == "Wallet", onClick = { paymentMethod = "Wallet" }, colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant))
-                            Text("Wallet (Balance: $$walletBalance)", color = MaterialTheme.colorScheme.onBackground)
-                             if (paymentMethod == "Wallet") {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("10% OFF", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.labelSmall)
-                            }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(8.dp), 
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Pay via Wallet", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                            Text("Balance: ₹${String.format("%.2f", walletBalance)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { paymentMethod = "Card" }) {
-                            RadioButton(selected = paymentMethod == "Card", onClick = { paymentMethod = "Card" }, colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant))
-                            Text("Credit/Debit Card", color = MaterialTheme.colorScheme.onBackground)
+                        if (walletBalance < total) {
+                             Text("Low Balance", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { paymentMethod = "Cash" }) {
-                            RadioButton(selected = paymentMethod == "Cash", onClick = { paymentMethod = "Cash" }, colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant))
-                            Text("Pay at Station", color = MaterialTheme.colorScheme.onBackground)
-                        }
-                    }
+                     }
                 }
 
                  Spacer(modifier = Modifier.height(24.dp))
@@ -381,19 +533,19 @@ fun BookingDetailScreen(
                 GlassCard {
                     Column {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                             Text("Est. Charge (20kWh)", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                             Text("$${String.format("%.2f", subtotal)}", color = MaterialTheme.colorScheme.onBackground)
+                             Text("Charge ($selectedHours h $selectedMinutes m)", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                             Text("₹${String.format("%.2f", subtotal)}", color = MaterialTheme.colorScheme.onBackground)
                         }
                         if (discount > 0) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                  Text("Wallet Discount", color = MaterialTheme.colorScheme.tertiary)
-                                 Text("-$${String.format("%.2f", discount)}", color = MaterialTheme.colorScheme.tertiary)
+                                 Text("-₹${String.format("%.2f", discount)}", color = MaterialTheme.colorScheme.tertiary)
                             }
                         }
                         Divider(color = MaterialTheme.colorScheme.outlineVariant, modifier = Modifier.padding(vertical = 8.dp))
                          Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                              Text("Total to Pay", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-                             Text("$${String.format("%.2f", total)}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                             Text("₹${String.format("%.2f", total)}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -410,13 +562,17 @@ fun BookingDetailScreen(
                             } else if (selectedSlot == null) {
                                 scope.launch { snackbarHostState.showSnackbar("Please select a time slot") }
                             } else {
-                                viewModel.processBooking(
-                                    stationId = stationId,
-                                    stationName = stationName,
-                                    amount = total,
-                                    paymentMethod = paymentMethod,
-                                    date = selectedDate!!
-                                )
+                                if (walletBalance >= total) {
+                                    viewModel.processBooking(
+                                        stationId = stationId,
+                                        stationName = stationName,
+                                        amount = total,
+                                        paymentMethod = "Wallet",
+                                        date = selectedDate!!
+                                    )
+                                } else {
+                                    showLowBalanceDialog = true
+                                }
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),

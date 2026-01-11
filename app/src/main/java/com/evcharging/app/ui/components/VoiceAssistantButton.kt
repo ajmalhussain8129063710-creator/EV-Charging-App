@@ -4,6 +4,7 @@ import android.Manifest
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material3.FloatingActionButton
@@ -57,9 +58,9 @@ fun VoiceAssistantButton(
         modifier = Modifier.padding(16.dp)
     ) {
         Icon(
-            imageVector = if (voiceState is VoiceState.Listening) Icons.Default.MicOff else Icons.Default.Mic,
-            contentDescription = "Voice Assistant",
-            tint = MaterialTheme.colorScheme.onPrimary
+            imageVector = if (voiceState is VoiceState.Listening) Icons.Default.MicOff else Icons.Default.AutoAwesome,
+            contentDescription = "AI Assistant",
+            tint = MaterialTheme.colorScheme.onTertiary
         )
     }
 }

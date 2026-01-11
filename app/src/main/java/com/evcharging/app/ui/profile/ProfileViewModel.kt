@@ -87,4 +87,8 @@ class ProfileViewModel @Inject constructor(
     fun resetUpdateSuccess() {
         _updateSuccess.value = false
     }
+
+    fun logout() {
+        authRepository.logout()
+    }
 }

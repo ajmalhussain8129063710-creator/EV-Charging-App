@@ -50,18 +50,36 @@ class AdminWalletViewModel @Inject constructor(
         }
     }
 
+    private val _stationEngagement = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val stationEngagement: StateFlow<Map<String, Double>> = _stationEngagement.asStateFlow()
+
     private fun calculateTotals(transactions: List<Transaction>) {
-        var pending = 0.0
-        var account = 0.0
+        var debit = 0.0
+        var credit = 0.0
+        
+        // Calculate Station Engagement
+        val engagementMap = mutableMapOf<String, Double>()
+        
         transactions.forEach {
-            when (it.status) {
-                TransactionStatus.PENDING -> pending += it.amount
-                TransactionStatus.IN_PROGRESS, TransactionStatus.COMPLETED -> account += it.amount
-                else -> {} // Ignore Failed/Refunded
+            when (it.type) {
+                com.evcharging.admin.model.TransactionType.REFUND -> debit += it.amount
+                com.evcharging.admin.model.TransactionType.TOPUP, 
+                com.evcharging.admin.model.TransactionType.BOOKING -> credit += it.amount
+                else -> {}
+            }
+            
+            // Engagement Logic (Approximation based on Booking transactions)
+            if (it.type == com.evcharging.admin.model.TransactionType.BOOKING && it.stationId.isNotEmpty()) {
+                val currentHours = engagementMap.getOrDefault(it.stationId, 0.0)
+                // Assuming average 1 hour per booking if duration not available in Transaction
+                // Ideally, fetch Bookings collection for accurate duration. 
+                // Using 1.0 for now.
+                engagementMap[it.stationId] = currentHours + 1.0
             }
         }
-        _pendingAmount.value = pending
-        _accountAmount.value = account
+        _pendingAmount.value = debit
+        _accountAmount.value = credit
+        _stationEngagement.value = engagementMap
     }
 
     fun markAsCompleted(transactionId: String) {

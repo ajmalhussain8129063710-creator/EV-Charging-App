@@ -193,7 +193,7 @@ fun DashboardContent(
                                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                         )
                                         Text(
-                                            text = "$${station!!.pricePerKw}/kW",
+                                            text = "₹${station!!.pricePerKw}/kW",
                                             style = MaterialTheme.typography.titleMedium,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Bold
@@ -268,7 +268,7 @@ fun DashboardContent(
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = com.evcharging.admin.model.BookingDateFormatter.format(booking.bookingDate), // Need formatter or just manual
+                                            text = BookingDateFormatter.format(booking.bookingDate), // Need formatter or just manual
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )

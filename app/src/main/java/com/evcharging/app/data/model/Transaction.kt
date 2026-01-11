@@ -8,17 +8,9 @@ data class Transaction(
     val userId: String = "",
     val stationId: String = "",
     val amount: Double = 0.0,
-    val type: TransactionType = TransactionType.BOOKING, // BOOKING, REFUND, TOPUP
-    val status: TransactionStatus = TransactionStatus.PENDING, // PENDING, COMPLETED, FAILED
-    val rrn: String = "", // Reference Number
-    val paymentMethod: String = "Wallet", // UPI, Card, Wallet
+    val type: String = "BOOKING", // BOOKING, REFUND, TOPUP
+    val status: String = "PENDING", // PENDING, COMPLETED, FAILED, Confirmed, Charging
+    val rrn: String = "", 
+    val paymentMethod: String = "Wallet",
     val timestamp: Timestamp = Timestamp.now()
 )
-
-enum class TransactionType {
-    BOOKING, REFUND, TOPUP
-}
-
-enum class TransactionStatus {
-    PENDING, COMPLETED, FAILED, REFUNDED, IN_PROGRESS
-}

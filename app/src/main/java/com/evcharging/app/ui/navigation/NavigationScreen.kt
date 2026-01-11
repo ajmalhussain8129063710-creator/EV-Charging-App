@@ -163,8 +163,8 @@ fun NavigationScreen(
                 if (route != null && route!!.points.isNotEmpty()) {
                     Polyline(
                         points = route!!.points,
-                        color = MaterialTheme.colorScheme.primary,
-                        width = 12f,
+                        color = Color(0xFF00E5FF), // Neon Cyan Highlighting
+                        width = 16f,
                         geodesic = true
                     )
 

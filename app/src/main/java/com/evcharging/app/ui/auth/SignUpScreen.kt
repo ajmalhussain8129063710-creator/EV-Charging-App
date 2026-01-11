@@ -27,7 +27,7 @@ fun SignUpScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("ajmalhussain8129063710@gmail.com") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var carModel by remember { mutableStateOf("") }
     var carColor by remember { mutableStateOf("") }

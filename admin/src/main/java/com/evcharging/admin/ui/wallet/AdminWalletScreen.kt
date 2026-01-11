@@ -58,33 +58,107 @@ fun AdminWalletScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 WalletCard(
-                    title = "Pending",
-                    amount = pendingAmount,
-                    color = Color(0xFFFFA726),
+                    title = "Total Credit (In)",
+                    amount = accountAmount, // Using accountAmount as Credit for now
+                    color = Color(0xFF66BB6A), // Green
                     modifier = Modifier.weight(1f)
                 )
                 WalletCard(
-                    title = "Account",
-                    amount = accountAmount,
-                    color = Color(0xFF66BB6A),
+                    title = "Total Debit (Out)",
+                    amount = pendingAmount, // Using pendingAmount as Debit for now (or derive correctly)
+                    color = Color(0xFFEF5350), // Red
                     modifier = Modifier.weight(1f)
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text("Recent Transactions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Admin Ledger", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Ledger Table Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Date", modifier = Modifier.weight(1.5f), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                Text("Source", modifier = Modifier.weight(1.5f), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                Text("DR", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = Color(0xFFEF5350))
+                Text("CR", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = Color(0xFF66BB6A))
+            }
+            
             Spacer(modifier = Modifier.height(8.dp))
 
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items(transactions) { transaction ->
-                    TransactionItem(transaction = transaction, onComplete = {
-                        viewModel.markAsCompleted(transaction.id)
-                    })
+                    LedgerRow(transaction)
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun LedgerRow(transaction: Transaction) {
+    val isCredit = transaction.type == com.evcharging.admin.model.TransactionType.TOPUP || transaction.type == com.evcharging.admin.model.TransactionType.BOOKING
+    val isDebit = transaction.type == com.evcharging.admin.model.TransactionType.REFUND
+    
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Date
+            Text(
+                text = SimpleDateFormat("MMM dd\nHH:mm", Locale.getDefault()).format(transaction.timestamp.toDate()),
+                modifier = Modifier.weight(1.5f),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            
+            // Source
+            val sourceText = when(transaction.type) {
+                com.evcharging.admin.model.TransactionType.TOPUP -> "User Recharge"
+                com.evcharging.admin.model.TransactionType.BOOKING -> "Booking"
+                com.evcharging.admin.model.TransactionType.REFUND -> "Refund"
+                else -> "Other"
+            }
+            Text(
+                text = sourceText,
+                modifier = Modifier.weight(1.5f),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium
+            )
+            
+            // DR
+            Text(
+                text = if (isDebit) "₹${String.format("%.0f", transaction.amount)}" else "-",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = if (isDebit) Color(0xFFEF5350) else Color.Gray.copy(alpha = 0.5f)
+            )
+            
+            // CR
+            Text(
+                text = if (isCredit) "₹${String.format("%.0f", transaction.amount)}" else "-",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = if (isCredit) Color(0xFF66BB6A) else Color.Gray.copy(alpha = 0.5f)
+            )
         }
     }
 }
@@ -102,46 +176,7 @@ fun WalletCard(title: String, amount: Double, color: Color, modifier: Modifier =
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(title, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-            Text("$${String.format("%.2f", amount)}", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = color)
-        }
-    }
-}
-
-@Composable
-fun TransactionItem(transaction: Transaction, onComplete: () -> Unit) {
-    Card(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text("Booking: ${transaction.bookingId.take(8)}...", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                Text(
-                    SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(transaction.timestamp.toDate()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text("$${String.format("%.2f", transaction.amount)}", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                if (transaction.status == TransactionStatus.PENDING) {
-                    Button(
-                        onClick = onComplete,
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                        modifier = Modifier.height(30.dp)
-                    ) {
-                        Text("Complete", style = MaterialTheme.typography.labelSmall)
-                    }
-                } else {
-                    Text("Completed", style = MaterialTheme.typography.labelSmall, color = Color(0xFF66BB6A))
-                }
-            }
+            Text("₹${String.format("%.2f", amount)}", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = color)
         }
     }
 }

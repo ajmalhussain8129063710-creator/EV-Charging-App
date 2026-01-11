@@ -1,446 +1,354 @@
 ﻿package com.evcharging.app.ui.home
 
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BatteryChargingFull
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Navigation
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
-import com.evcharging.app.ui.components.Car3DViewer
 import com.evcharging.app.ui.components.GlassCard
 import com.evcharging.app.ui.components.NeonButton
-import com.evcharging.app.ui.components.VoiceAssistantButton
-    
+
 @Composable
 fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
     voiceViewModel: com.evcharging.app.ui.components.VoiceAssistantViewModel = hiltViewModel()
 ) {
-    val carModel by viewModel.carModel.collectAsState()
-    val voiceResponse by voiceViewModel.voiceResponse.collectAsState()
-
     LaunchedEffect(Unit) {
         viewModel.refreshData()
     }
+
+    val upcomingBookings by viewModel.upcomingBookings.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
     
-    // Handle Voice Navigation Events
-    LaunchedEffect(voiceResponse) {
-        voiceResponse?.let { response ->
-            if (response.startsWith("NAVIGATE_TRIP")) {
-                // Format: NAVIGATE_TRIP:Source:Destination
-                // For now, simpler navigation to Trip Planner
-                navController.navigate("tripplanner")
-            }
-        }
-    }
-    
-    // AI Theme Colors
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val cardBackground = MaterialTheme.colorScheme.surfaceVariant
+    // UI Colors from Screenshot
+    val GreenAccent = Color(0xFF00C853)
+    val LightGreenBg = Color(0xFFE8F5E9)
+    val TextDark = Color(0xFF1E1E1E)
+    val TextGrey = Color(0xFF757575)
+    val SurfaceOffWhite = Color(0xFFF9F9F9)
 
     var showMenu by remember { mutableStateOf(false) }
     var showHistoryDialog by remember { mutableStateOf(false) }
     var showPointsDialog by remember { mutableStateOf(false) }
+    var showNotificationDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = SurfaceOffWhite,
         floatingActionButton = {
-            VoiceAssistantButton { command ->
-                voiceViewModel.processCommand(command)
+            FloatingActionButton(
+                onClick = { navController.navigate("admin_signup") },
+                containerColor = GreenAccent,
+                contentColor = Color.White,
+                shape = CircleShape,
+                modifier = Modifier.size(64.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Host Station", modifier = Modifier.size(32.dp))
             }
         }
     ) { innerPadding ->
-        // Main Background Gradient
-        Box(
+        Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Good Morning,",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                        )
-                        Text(
-                            text = "Driver", // Could be user name
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    // Profile Icon Placeholder with Menu
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
-                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
-                            .clickable { showMenu = true },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Menu",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false },
-                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Profile", color = MaterialTheme.colorScheme.onSurface) },
-                                onClick = {
-                                    showMenu = false
-                                    navController.navigate("profile")
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Settings", color = MaterialTheme.colorScheme.onSurface) },
-                                onClick = {
-                                    showMenu = false
-                                    navController.navigate("settings")
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Help & Support", color = MaterialTheme.colorScheme.onSurface) },
-                                onClick = {
-                                    showMenu = false
-                                    navController.navigate("support")
-                                }
-                            )
-                            Divider(color = Color.Gray.copy(alpha = 0.5f))
-                            DropdownMenuItem(
-                                text = { Text("Charging History", color = MaterialTheme.colorScheme.onSurface) },
-                                onClick = {
-                                    showMenu = false
-                                    showHistoryDialog = true
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Loyalty Points", color = MaterialTheme.colorScheme.onSurface) },
-                                onClick = {
-                                    showMenu = false
-                                    showPointsDialog = true
-                                }
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Vehicle Search & 3D Visualization
-                var searchQuery by remember { mutableStateOf("") }
-                val car3dUrl by viewModel.car3dModelUrl.collectAsState()
-                val selectedColor by viewModel.selectedCarColor.collectAsState()
-
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { 
-                        searchQuery = it
-                        // Auto-search or wait for submit? doing auto for demo
-                        if (it.length > 2) viewModel.searchAndSelectCar(it)
-                    },
-                    placeholder = { Text("Search EV Model (e.g. Tesla)", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = Color.Transparent
-                    )
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(300.dp) // Car View Area
-                        .padding(vertical = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Car3DViewer(
-                        modelUrl = car3dUrl,
-                        carColor = selectedColor,
-                        onColorChange = viewModel::updateCarColor,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                
-                Text(
-                    text = "Touch car to customize & view details",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Active Bookings Section
-                val upcomingBookings by viewModel.upcomingBookings.collectAsState()
-                var bookingToCancel by remember { mutableStateOf<String?>(null) } // Booking ID
-
-                if (upcomingBookings.isNotEmpty()) {
-                    Text(
-                        text = "Active Booking",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    upcomingBookings.forEach { booking ->
-                        val status = booking["status"] as? String ?: "Confirmed"
-                        val bookingDate = booking["bookingDate"] as? Long ?: 0L
-                        val dateString = if (bookingDate > 0) java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault()).format(java.util.Date(bookingDate)) else "Scheduled"
-
-                        GlassCard(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { 
-                                // View Details or Manage
-                                if (status == "Charging") {
-                                    navController.navigate("charging/${booking["id"]}")
-                                } else {
-                                    bookingToCancel = booking["id"] as String // Open manage dialog
-                                }
-                            }
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Text(booking["stationName"] as String, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                                        Text(dateString, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                                    }
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(status, color = if(status == "Charging") MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                                        Text("$${booking["amount"]}", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), style = MaterialTheme.typography.titleMedium)
-                                    }
-                                }
-                                
-                                Spacer(modifier = Modifier.height(12.dp))
-                                
-                                if (status == "Confirmed") {
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Button(
-                                            onClick = { 
-                                                viewModel.startCharging(booking["id"] as String)
-                                                navController.navigate("charging/${booking["id"]}")
-                                            },
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-                                            modifier = Modifier.weight(1f).height(36.dp),
-                                            contentPadding = PaddingValues(0.dp)
-                                        ) {
-                                            Text("Start Charge")
-                                        }
-                                        OutlinedButton(
-                                            onClick = { bookingToCancel = booking["id"] as String },
-                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
-                                            modifier = Modifier.weight(1f).height(36.dp),
-                                            contentPadding = PaddingValues(0.dp)
-                                        ) {
-                                            Text("Cancel")
-                                        }
-                                    }
-                                } else if (status == "Charging") {
-                                     Button(
-                                        onClick = { navController.navigate("charging/${booking["id"]}") },
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-                                        modifier = Modifier.fillMaxWidth().height(36.dp)
-                                    ) {
-                                        Text("View Charging Session")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    if (bookingToCancel != null) {
-                        AlertDialog(
-                            onDismissRequest = { bookingToCancel = null },
-                            title = { Text("Booking Management", color = MaterialTheme.colorScheme.onSurface) },
-                            text = { 
-                                Column {
-                                    Text("Station: ${(upcomingBookings.find { it["id"] == bookingToCancel })?.get("stationName")}", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Would you like to cancel this booking? A refund will be initiated.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            },
-                            confirmButton = {
-                                Button(
-                                    onClick = { 
-                                        viewModel.cancelBooking(bookingToCancel!!)
-                                        bookingToCancel = null
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                                ) {
-                                    Text("Yes")
-                                }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { bookingToCancel = null }) {
-                                    Text("No", color = MaterialTheme.colorScheme.primary)
-                                }
-                            },
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            titleContentColor = MaterialTheme.colorScheme.onSurface,
-                            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Status Cards
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    StatusCard(
-                        title = "Battery",
-                        value = "85%",
-                        icon = Icons.Default.BatteryChargingFull,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatusCard(
-                        title = "Range",
-                        value = "320 km",
-                        icon = Icons.Default.Speed,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Quick Actions
-                Text(
-                    text = "Quick Actions",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.align(Alignment.Start)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    ActionButton(
-                        text = "Navigate",
-                        icon = Icons.Default.Navigation,
-                        onClick = { navController.navigate("navigation") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    ActionButton(
-                        text = "Plan Trip",
-                        icon = Icons.Default.Map,
-                        onClick = { navController.navigate("tripplanner") },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-            
-            // Partner/Admin Signup Button - Right Center
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 0.dp) // Stick to edge
-            ) {
-                Surface(
-                    onClick = { navController.navigate("admin_signup") },
-                    shape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    tonalElevation = 8.dp,
-                    shadowElevation = 8.dp
-                ) {
+                // 1. Header: Menu - Driver - Notification
+                item {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.BatteryChargingFull, 
-                            contentDescription = "Host Station",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextDark, modifier = Modifier.size(28.dp))
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                                modifier = Modifier.background(Color.White)
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Profile", color = TextDark) },
+                                    onClick = { showMenu = false; navController.navigate("profile") }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Settings", color = TextDark) },
+                                    onClick = { showMenu = false; navController.navigate("settings") }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Help & Support", color = TextDark) },
+                                    onClick = { showMenu = false; navController.navigate("support") }
+                                )
+                                Divider(color = Color.LightGray)
+                                DropdownMenuItem(
+                                    text = { Text("Charging History", color = TextDark) },
+                                    onClick = { showMenu = false; showHistoryDialog = true }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Loyalty Points", color = TextDark) },
+                                    onClick = { showMenu = false; showPointsDialog = true }
+                                )
+                            }
+                        }
+                        
                         Text(
-                            text = "Host",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight.Bold
+                            text = "Driver",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDark
                         )
+                        
+                        Box {
+                            IconButton(onClick = { showNotificationDialog = true }) {
+                                Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = TextDark, modifier = Modifier.size(28.dp))
+                            }
+                            // Notification Badge
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 8.dp, end = 8.dp)
+                                    .size(10.dp)
+                                    .background(Color.Red, CircleShape)
+                                    .border(1.5.dp, Color.White, CircleShape)
+                            )
+                        }
                     }
                 }
+
+                // 2. Search Bar
+                item {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .shadow(2.dp, CircleShape),
+                        shape = CircleShape,
+                        color = Color.White
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            // Using BasicTextField or Text for placeholder look since standard TextField has padding issues in small height
+                            Text(
+                                text = if(searchQuery.isEmpty()) "Search EV Model or Station..." else searchQuery,
+                                color = if(searchQuery.isEmpty()) TextGrey else TextDark,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+
+                // 3. Filter Chips (Nearby, Available, Fast Charger)
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        item {
+                            FilterChipItem(text = "Nearby", icon = Icons.Outlined.LocationOn, selected = true, color = TextDark)
+                        }
+                        item {
+                            FilterChipItem(text = "Available", selected = false, color = GreenAccent) // Text color green suggested by "Available" context
+                        }
+                        item {
+                            val isFastFilterEnabled by viewModel.isFastChargerFilterEnabled.collectAsState()
+                            FilterChipItem(
+                                text = "Fast Charger", 
+                                selected = isFastFilterEnabled, 
+                                color = TextDark,
+                                onClick = { viewModel.toggleFastChargerFilter() }
+                            )
+                        }
+                    }
+                }
+
+                // 4. Scan & Start Charging Hero Card
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(20.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Bolt,
+                                        contentDescription = null,
+                                        tint = GreenAccent,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Scan & Start Charging",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextDark
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Tap to scan QR on charger\nor connect automatically",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextGrey,
+                                    lineHeight = 20.sp
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = { navController.navigate("scan_qr") },
+                                    colors = ButtonDefaults.buttonColors(containerColor = GreenAccent),
+                                    shape = RoundedCornerShape(50), // Fully rounded
+                                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                                ) {
+                                    Text("Scan Now", fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                            }
+                            
+                            // Placeholder for Illustration
+                            Box(
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .background(LightGreenBg, RoundedCornerShape(16.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.QrCodeScanner, contentDescription = "QR", tint = GreenAccent, modifier = Modifier.size(48.dp))
+                            }
+                        }
+                    }
+                }
+
+                // 5. Active Sessions Header
+                item {
+                    Text(
+                        text = "Active Sessions",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
+                    )
+                }
+
+                // 6. Active Sessions List
+                if (upcomingBookings.isNotEmpty()) {
+                    items(upcomingBookings.size) { index ->
+                        val booking = upcomingBookings[index]
+                        val status = booking["status"] as? String ?: "Confirmed"
+                        val isLive = status == "Charging"
+                        
+                        SessionCard(
+                            booking = booking,
+                            isLive = isLive,
+                            onAction = { 
+                                if (isLive) navController.navigate("charging/${booking["id"]}")
+                                else viewModel.startCharging(booking["id"] as String)
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                } else {
+                     item {
+                        Text("No active sessions", color = TextGrey)
+                     }
+                }
+                
+                // Extra padding for FAB
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
+    }
+
+    // --- Dialogs ---
+
+    if (showNotificationDialog) {
+        AlertDialog(
+            onDismissRequest = { showNotificationDialog = false },
+            title = { Text("Notifications", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    // Mock Admin Update
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(Icons.Default.Bolt, contentDescription = null, tint = GreenAccent)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Station Update", fontWeight = FontWeight.Bold)
+                            Text("Fast Charger at AJU Station is now online and available for booking!", style = MaterialTheme.typography.bodySmall)
+                            Text("2 mins ago", color = TextGrey, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showNotificationDialog = false }) {
+                    Text("Close", color = GreenAccent)
+                }
+            },
+            containerColor = Color.White,
+            titleContentColor = TextDark,
+            textContentColor = TextDark
+        )
     }
 
     if (showHistoryDialog) {
         val history by viewModel.chargingHistory.collectAsState()
         AlertDialog(
             onDismissRequest = { showHistoryDialog = false },
-            title = { Text("Charging History", color = MaterialTheme.colorScheme.onSurface) },
+            title = { Text("Charging History", fontWeight = FontWeight.Bold) },
             text = {
                 if (history.isEmpty()) {
-                    Text("No recent charging history.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("No recent charging history.", color = TextGrey)
                 } else {
-                    androidx.compose.foundation.lazy.LazyColumn {
+                    LazyColumn {
                         items(history.size) { index ->
                             val transaction = history[index]
                             Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                                Text("Station ID: ${transaction.stationId}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                                Text("Amount: $${transaction.amount}", color = MaterialTheme.colorScheme.primary)
-                                Text("Date: ${transaction.timestamp.toDate()}", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                                Divider(color = Color.Gray.copy(alpha = 0.5f), modifier = Modifier.padding(top = 8.dp))
+                                Text("Station ID: ${transaction.stationId}", color = TextDark, fontWeight = FontWeight.Bold)
+                                Text("Amount: $${transaction.amount}", color = GreenAccent)
+                                Text("Date: ${transaction.timestamp.toDate()}", color = TextGrey, style = MaterialTheme.typography.bodySmall)
+                                Divider(color = Color.LightGray, modifier = Modifier.padding(top = 8.dp))
                             }
                         }
                     }
@@ -448,10 +356,12 @@ fun HomeScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showHistoryDialog = false }) {
-                    Text("Close", color = MaterialTheme.colorScheme.primary)
+                    Text("Close", color = GreenAccent)
                 }
             },
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.White,
+            titleContentColor = TextDark,
+            textContentColor = TextDark
         )
     }
 
@@ -459,66 +369,164 @@ fun HomeScreen(
         val points by viewModel.userPoints.collectAsState()
         AlertDialog(
             onDismissRequest = { showPointsDialog = false },
-            title = { Text("Loyalty Points", color = MaterialTheme.colorScheme.onSurface) },
+            title = { Text("Loyalty Points", fontWeight = FontWeight.Bold) },
             text = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(48.dp))
+                    androidx.compose.material.icons.Icons.Default.Star?.let {
+                        Icon(it, contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(48.dp))
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("$points Points", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    Text("$points Points", style = MaterialTheme.typography.displayMedium, color = TextDark, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Earn points with every charge!", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Earn points with every charge!", color = TextGrey)
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showPointsDialog = false }) {
-                    Text("Awesome!", color = MaterialTheme.colorScheme.primary)
+                    Text("Awesome!", color = GreenAccent)
                 }
             },
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.White,
+            titleContentColor = TextDark,
+            textContentColor = TextDark
         )
     }
 }
 
 @Composable
-fun StatusCard(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    GlassCard(
-        modifier = modifier
+fun FilterChipItem(text: String, icon: ImageVector? = null, selected: Boolean, color: Color, onClick: () -> Unit = {}) {
+    Surface(
+        color = if (selected) Color(0xFFE0E0E0) else Color.White, // Grey selected background or white
+        shape = RoundedCornerShape(50),
+        border = if(!selected) BorderStroke(1.dp, Color(0xFFEEEEEE)) else null,
+        modifier = Modifier.height(36.dp).clickable { onClick() }
     ) {
-        Column(
-            horizontalAlignment = Alignment.Start
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(24.dp)
+            if (icon != null) {
+                Icon(icon, contentDescription = null, tint = Color(0xFF00C853), modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge,
+                color = if(text == "Available") Color(0xFF00C853) else Color(0xFF424242),
+                fontWeight = FontWeight.Medium
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = value, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-            Text(text = title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-fun ActionButton(
-    text: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    NeonButton(
-       text = text,
-       onClick = onClick,
-       modifier = modifier,
-       color = MaterialTheme.colorScheme.primary // Use theme primary
-    )
+fun SessionCard(booking: Map<String, Any>, isLive: Boolean, onAction: () -> Unit) {
+    val GreenAccent = Color(0xFF00C853)
+    val TextDark = Color(0xFF1E1E1E)
+    val TextGrey = Color(0xFF757575)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (isLive) {
+                            Surface(color = GreenAccent, shape = RoundedCornerShape(4.dp), modifier = Modifier.padding(end = 8.dp)) {
+                                Text("LIVE", color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                            }
+                        }
+                        Text(
+                            text = booking["stationName"] as? String ?: "EV Station",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDark
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Connector: CCS2", color = TextGrey, style = MaterialTheme.typography.bodySmall)
+                    Text("Power: 22 kW", color = TextGrey, style = MaterialTheme.typography.bodySmall)
+                }
+                
+                if (isLive) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("LIVE", color = GreenAccent, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        }
+                        Text("65%", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextDark)
+                    }
+                } else {
+                     Text(
+                        text = "Apr 16, 2024", // Mock Date
+                        color = TextGrey, 
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Progress Bar
+            LinearProgressIndicator(
+                progress = 0.65f, // Mock progress
+                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                color = GreenAccent,
+                trackColor = Color(0xFFF1F8E9)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Footer
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "₹ ${booking["amount"]}",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+                
+                if (isLive) {
+                    Text("18 min left", color = TextGrey, style = MaterialTheme.typography.bodyMedium)
+                } else {
+                     // Booking confirmed, waiting to start
+                     Button(
+                        onClick = onAction,
+                        colors = ButtonDefaults.buttonColors(containerColor = GreenAccent),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.height(36.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp)
+                     ) {
+                         Text("Start Charging", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                     }
+                }
+            }
+            
+            if (isLive) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onAction,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenAccent),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("View Session", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+        }
+    }
 }
-
-

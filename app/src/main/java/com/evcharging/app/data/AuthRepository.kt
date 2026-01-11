@@ -12,9 +12,14 @@ class AuthRepository @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
 
-    suspend fun login(email: String, pass: String): Result<Boolean> {
+    suspend fun login(emailOrPhone: String, pass: String): Result<Boolean> {
         return try {
-            auth.signInWithEmailAndPassword(email, pass).await()
+            val finalEmail = if (emailOrPhone.contains("@")) {
+                emailOrPhone
+            } else {
+                "${emailOrPhone.replace("[^0-9]".toRegex(), "")}@evapp.com"
+            }
+            auth.signInWithEmailAndPassword(finalEmail, pass).await()
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)

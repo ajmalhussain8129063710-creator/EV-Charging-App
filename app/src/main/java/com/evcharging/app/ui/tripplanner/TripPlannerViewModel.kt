@@ -193,8 +193,29 @@ class TripPlannerViewModel @Inject constructor(
 
     fun loadBookings() {
         viewModelScope.launch {
-            val result = bookingRepository.getUserBookings()
-            _upcomingBookings.value = result.getOrDefault(emptyList())
+            val bookingsResult = bookingRepository.getUserBookings()
+            val bookings = bookingsResult.getOrDefault(emptyList())
+            
+            val stationsResult = repository.getStations()
+            val stations = stationsResult.getOrDefault(emptyList())
+            
+            // Enrich bookings with station location data
+            val enrichedBookings = bookings.map { booking ->
+                val stationName = booking["stationName"] as? String ?: ""
+                val station = stations.find { it.name.equals(stationName, ignoreCase = true) }
+                
+                if (station != null) {
+                    booking + mapOf(
+                        "latitude" to station.latitude,
+                        "longitude" to station.longitude,
+                        "address" to station.address // Also useful
+                    )
+                } else {
+                    booking
+                }
+            }
+            
+            _upcomingBookings.value = enrichedBookings
         }
     }
 
